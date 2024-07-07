@@ -1,0 +1,9 @@
+dist/*
+build
+3rd/*
+.xmake
+.vscode/*
+tui/example/*
+!3rd/xmake.lua
+!dist/.gitkeep
+!.vscode/tasks.json
