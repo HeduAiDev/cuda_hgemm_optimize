@@ -1,5 +1,5 @@
 
--- add_rules("mode.debug", "mode.release")
+add_rules("mode.debug", "mode.release")
 includes("3rd", "tools")
 set_languages("c++17")
 add_requires("cutlass", "eigen", "ftxui", {system = false})
@@ -22,13 +22,23 @@ target("algorithm")
     add_includedirs("$(buildir)/include", {interface = true})
     add_deps("compilePrepare")
 
+target("tui_tool_sets")
+    set_default(false)
+    set_kind("static")
+    add_files("tui/Component/*.cpp")
+    set_targetdir("$(buildir)/lib")
+    add_includedirs("tui/include")
+    add_packages("ftxui")
+    add_deps("algorithm")
+
 target("TUI")
     set_kind("binary")
     add_files("tui/*.cu")
     add_includedirs("tui/include")
     set_targetdir("dist/tui")
     add_packages("ftxui")
-    -- add_deps("algorithm")
+    add_deps("algorithm", "tui_tool_sets")
+    -- add_ldflags("-static", {force = true})
 
 
 
