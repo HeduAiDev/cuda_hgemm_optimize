@@ -209,10 +209,6 @@ int main()
 
     Element matrix_b = make_grid(b_ptr, 128, 128);
 
-    int bias_x = 0;
-    int bias_y = 0;
-    int mouse_x = 0;
-
     Component block2_renderer = Renderer(block2,
                                          [&]
                                          {
