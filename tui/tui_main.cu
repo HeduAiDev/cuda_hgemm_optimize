@@ -39,14 +39,10 @@ int main()
         kernel_available.push_back("kernel" + std::to_string(i));
     };
     int kernel_selected = 0;
-    Component kernel_selector1 = Radiobox(&kernel_available, &kernel_selected) | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 5);
-    Component kernel_selector = Renderer(kernel_selector1, [&] {
-        return vbox({
-            hbox({text("kernel:"), text(kernel_available[kernel_selected]) | bold }),
-            separator(),
-            kernel_selector1->Render()
-        }) | border;
-    });
+    tui::component::RadioFrameOptions radioframe_options;
+    radioframe_options.max_height = 5;
+    radioframe_options.title_regx = "kernel:%s";
+    Component kernel_selector = tui::component::RadioFrame(&kernel_available, &kernel_selected, radioframe_options) | border;
 
     // runtime info
     bool ready = false;
@@ -227,7 +223,7 @@ int main()
     // options.placeholder_block1 = text("Redraw matrix is inefficient") | center | bold;
     options.placeholder_block2 = text("Redraw matrix is inefficient") | center | bold;
 
-    Component menu1_renderer = Resizable4Block(block1_renderer, block2_renderer, block3, block4, screen, options);
+    Component menu1_renderer = tui::component::Resizable4Block(block1_renderer, block2_renderer, block3, block4, screen, options);
 
     int tab_index = 0;
     std::vector<std::string> tab_entries = {

@@ -27,7 +27,7 @@ namespace tui {
     namespace component {
         using namespace ftxui;
 
-        struct Resizable4BlockOptions : public ComponentBase{
+        struct Resizable4BlockOptions {
             Element placeholder_block1 = nullptr;
             Element placeholder_block2 = nullptr;
             Element placeholder_block3 = nullptr;
@@ -90,6 +90,28 @@ namespace tui {
                 Resizable4BlockOptions options_;
         };
 
+        struct RadioFrameOptions : public RadioboxOption {
+            std::string title_regx = "selected: %s";
+            int max_width = 200;
+            int max_height = 200;
+            int min_width = 0;
+            int min_height = 0;
+            RadioFrameOptions() = default;
+        };
+
+        class RadioFrameBase : public ftxui::ComponentBase, public RadioFrameOptions {
+            public:
+                explicit RadioFrameBase(RadioFrameOptions& options = RadioFrameOptions());
+                Element Render() override;
+            private:
+                Component content_;
+        };
+
+
+
+
         Component Resizable4Block(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options);
+        Component RadioFrame(RadioFrameOptions options);
+        Component RadioFrame(ConstStringListRef entries, int* selected, RadioFrameOptions options = RadioFrameOptions());
     }
 }
