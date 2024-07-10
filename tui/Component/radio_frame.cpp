@@ -40,13 +40,13 @@ namespace tui {
         }
 
         Component RadioFrame(RadioFrameOptions options) {
-            return Make<RadioFrameBase>(std::move(options));
+            return Make<RadioFrameBase>(options);
         }
 
         Component RadioFrame(ConstStringListRef entries, int * selected, RadioFrameOptions options) {
             options.entries = entries;
             options.selected = selected;
-            return Make<RadioFrameBase>(std::move(options));
+            return Make<RadioFrameBase>(options);
         } 
     }
 }

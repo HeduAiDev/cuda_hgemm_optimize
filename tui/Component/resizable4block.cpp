@@ -26,11 +26,12 @@ namespace tui {
     namespace component {
         using namespace ftxui;
         Resizable4Blockbase::Resizable4Blockbase(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen,const Resizable4BlockOptions options) 
-        : screen_(screen), options_(options) {
-            block1_ = std::move(block1);
-            block2_ = std::move(block2);
-            block3_ = std::move(block3);
-            block4_ = std::move(block4);
+        :   block1_(std::move(block1)),
+            block2_(std::move(block2)),
+            block3_(std::move(block3)),
+            block4_(std::move(block4)),
+            screen_(screen), 
+            options_(options) {
 
             Add(Container::Vertical({
                 Container::Horizontal({

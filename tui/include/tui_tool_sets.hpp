@@ -54,21 +54,12 @@ namespace tui {
                 // block1 | block2
                 // block3 | block4
                 explicit Resizable4Blockbase(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options = Resizable4BlockOptions());
-                
                 Element Render() override;
-
                 bool OnEvent(Event event) override;
-
                 bool OnMouseEvent(Event event);
-
                 bool isDragging();
-
                 Element getVSeparator();
                 Element getHSeparator();
-
-
-                
-                
             private:
                 Component block1_;
                 Component block2_;
@@ -86,7 +77,6 @@ namespace tui {
                 bool is_dragging_vseparator_down_ = false;
                 int bias_x_ = 0;
                 int bias_y_ = 0;
-         
                 Resizable4BlockOptions options_;
         };
 
@@ -101,7 +91,7 @@ namespace tui {
 
         class RadioFrameBase : public ftxui::ComponentBase, public RadioFrameOptions {
             public:
-                explicit RadioFrameBase(RadioFrameOptions& options = RadioFrameOptions());
+                explicit RadioFrameBase(RadioFrameOptions& options);
                 Element Render() override;
             private:
                 Component content_;
@@ -110,8 +100,51 @@ namespace tui {
 
 
 
+        enum class InputType {
+            Text,
+            Password,
+            Number
+        };
+        
+        struct InputElementConfig : public InputOption {
+            ftxui::StringRef label;
+            InputType input_type = InputType::Text;
+            int max_label_width = -1;
+            int min_label_width = -1;
+            int max_input_width = -1;
+            int min_input_width = -1;
+            std::function<Element(Element)> label_style = nullptr;
+            std::function<Element(Element)> input_style = nullptr;
+        };
+        struct InputFormOptions {
+            using ConfigRow = std::vector<InputElementConfig>;
+            InputType default_input_type = InputType::Text;
+            int default_max_label_width = 200;
+            int default_min_label_width = 0;
+            int default_max_input_width = 200;
+            int default_min_input_width = 0;
+            std::vector<ConfigRow> elements_config;
+            std::function<Element(Element)> default_label_style = [] (Element ele) { return ele; };
+            std::function<Element(Element)> default_input_style = [] (Element ele) { return ele; };
+            InputFormOptions() = default;
+        };
+        class InputFormBase : public ftxui::ComponentBase, public InputFormOptions {
+            public:
+                explicit InputFormBase(InputFormOptions& options);
+                Element Render() override;
+            private:
+                Component setWidth(Component component, int max_width, int min_width);
+                Element setWidth(Element element, int max_width, int min_width);
+                std::vector<Component> renderFormRow(ConfigRow row);
+                std::vector<std::vector<Component>> components_;
+        };
+
+
+
+
         Component Resizable4Block(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options);
-        Component RadioFrame(RadioFrameOptions options);
+        Component RadioFrame(RadioFrameOptions options = RadioFrameOptions());
         Component RadioFrame(ConstStringListRef entries, int* selected, RadioFrameOptions options = RadioFrameOptions());
+        Component InputForm(std::vector<InputFormOptions::ConfigRow> elements_config, InputFormOptions options = InputFormOptions());
     }
 }

@@ -75,9 +75,7 @@ int main()
     std::string config_tile_k;
     std::string config_launch_cnt;
 
-    // InputOption input_style = InputOption::Spacious();
-    InputOption input_option;
-    input_option.transform = [](InputState state)
+    auto input_transform = [](InputState state)
     {
         state.element |= borderRounded;
         state.element |= color(Color::White);
@@ -99,58 +97,44 @@ int main()
 
         return state.element;
     };
-    Component input_config_m = Input(&config_m, "M", input_option);
-    Component input_config_n = Input(&config_n, "N", input_option);
-    Component input_config_k = Input(&config_k, "K", input_option);
-    Component input_config_tile_m = Input(&config_tile_m, "TileM", input_option);
-    Component input_config_tile_n = Input(&config_tile_n, "TileN", input_option);
-    Component input_config_tile_k = Input(&config_tile_k, "TileK", input_option);
+
+
+    auto input_style = [](Element ele) { return ele | size(WIDTH, LESS_THAN, 12) | size(WIDTH, GREATER_THAN, 7) | size(HEIGHT, LESS_THAN, 5); };
+    auto label_style = [](Element ele) { return ele | align_right | vcenter ;};
+
+    auto input_cell = [&] (std::string label, ftxui::StringRef constent, std::string placeholder, tui::component::InputType inputType, std::function<Element(InputState)> transform)
+    { 
+        tui::component::InputElementConfig input_config;
+        input_config.label = label;
+        input_config.input_type = inputType;
+        input_config.placeholder = placeholder;
+        input_config.content = std::move(constent);
+        input_config.transform = transform;
+        input_config.input_style = input_style;
+        input_config.label_style = label_style;
+        return input_config;
+    };
+    
+
+    Component input_form =  tui::component::InputForm({
+        {
+            input_cell("M :", &config_m, "M", tui::component::InputType::Number, input_transform),
+            input_cell("N :", &config_n, "N", tui::component::InputType::Number, input_transform),
+            input_cell("K :", &config_k, "K", tui::component::InputType::Number, input_transform),
+        },
+        {
+            input_cell("TileM :", &config_tile_m, "TileM", tui::component::InputType::Number, input_transform),
+            input_cell("TileN :", &config_tile_n, "TileN", tui::component::InputType::Number, input_transform),
+            input_cell("TileK :", &config_tile_k, "TileK", tui::component::InputType::Number, input_transform),
+        },
+    });
     Component input_config_launch_cnt = Input(&config_launch_cnt, "launch count"); 
     
-    input_config_m |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    input_config_n |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    input_config_k |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    input_config_tile_m |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    input_config_tile_n |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    input_config_tile_k |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    input_config_launch_cnt |= CatchEvent([&](Event event) {
-        return event.is_character() && !std::isdigit(event.character()[0]);
-    });
-    Component config_panel = Container::Vertical({
-        Container::Horizontal({
-            input_config_m,
-            input_config_n,
-            input_config_k,
-        }),
-        Container::Horizontal({
-            input_config_tile_m,
-            input_config_tile_n,
-            input_config_tile_k,
-        }),
-        input_config_launch_cnt
-    });
-
-    auto input = [](Element ele) { return ele | size(WIDTH, LESS_THAN, 12) | size(WIDTH, GREATER_THAN, 7) | size(HEIGHT, LESS_THAN, 5); };
-    auto h = [](Element ele) { return ele | align_right | vcenter ;};
-    Component config_panel_renderer = Renderer(config_panel, [&] {
+    input_form -> ChildAt(0) -> Add(input_config_launch_cnt);
+    Component config_panel_renderer = Renderer(input_form, [&] {
         return window(text("config") | hcenter | bold, vbox({
-            gridbox({
-                {h(text(" M :")), input(input_config_m -> Render()), h(text(" N :")), input(input_config_n -> Render()), h(text(" K :")), input(input_config_k -> Render())},
-                {h(text(" TileM :")), input(input_config_tile_m -> Render()), h(text(" TileN :")), input(input_config_tile_n -> Render()), h(text(" TileK :")), input(input_config_tile_k -> Render())},
-            }),
-            hbox({h(text("Launch cnt :")) , input(input_config_launch_cnt -> Render())})
+            input_form -> Render(),
+            hbox({label_style(text("Launch cnt :")), input_style(input_config_launch_cnt -> Render())})
         }))  | xflex_grow;
 
     });
@@ -241,7 +225,7 @@ int main()
     });
     Component main_renderer = Renderer(main_container, [&] {
         return vbox({
-            text("Demo") | bold | hcenter,
+            text("Demo" + config_tile_m +":"+ config_m +":"+ config_launch_cnt) | bold | hcenter,
             tab_section -> Render(),
             tab_content -> Render()
         });
