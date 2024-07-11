@@ -156,111 +156,112 @@ int main()
     //block2
     /////////////////////////////////////////////////////////////////////
 
-    auto make_box = [](std::string val) {
-        return text(val) | center | frame | size(WIDTH, EQUAL, 3) | size(HEIGHT, EQUAL, 1) ;
-    };
-    Box b_box;
-    auto make_grid = [&](int* ptr, int rows, int cols) {
-        std::vector<Elements> crows;
-        for (int i = 0; i < rows; i++) {
-            std::vector<Element> ccols;
-            std::vector<Element> row_separator;
-            for (int j = 0; j < cols; j++) {
-                Element e = make_box(std::to_string(ptr[i * cols + j]));
-                // if (i == 0) {
-                //     e = e | reflect(boxs[j]);
-                // }
-                ccols.push_back(e);
-                ccols.push_back(separator());
-                row_separator.push_back(separator());
-                row_separator.push_back(separator());
-            }
-            crows.push_back(ccols);
-            if (i != rows - 1) {
-                crows.push_back(row_separator);
-            }
+    // auto make_box = [](std::string val) {
+    //     return text(val) | center | frame | size(WIDTH, EQUAL, 3) | size(HEIGHT, EQUAL, 1) ;
+    // };
+    // Box b_box;
+    // auto make_grid = [&](int* ptr, int rows, int cols) {
+    //     std::vector<Elements> crows;
+    //     for (int i = 0; i < rows; i++) {
+    //         std::vector<Element> ccols;
+    //         std::vector<Element> row_separator;
+    //         for (int j = 0; j < cols; j++) {
+    //             Element e = make_box(std::to_string(ptr[i * cols + j]));
+    //             // if (i == 0) {
+    //             //     e = e | reflect(boxs[j]);
+    //             // }
+    //             ccols.push_back(e);
+    //             ccols.push_back(separator());
+    //             row_separator.push_back(separator());
+    //             row_separator.push_back(separator());
+    //         }
+    //         crows.push_back(ccols);
+    //         if (i != rows - 1) {
+    //             crows.push_back(row_separator);
+    //         }
             
-        }
-        return gridbox(crows) | reflect(b_box);
-    };
+    //     }
+    //     return gridbox(crows) | reflect(b_box);
+    // };
 
-    float focus_x = 0.5f;
-    float focus_y = 0.5f;
-    SliderOption<float> slider_x_option = {&focus_x, 0.0f, 1.0f, 0.01f, Direction::Right, Color::White, Color::Grey50};
-    SliderOption<float> slider_y_option = {&focus_y, 0.0f, 1.0f, 0.01f, Direction::Down, Color::White, Color::Grey50};
-    auto slider_x = Slider(slider_x_option) | bgcolor(Color::Grey23);
-    auto slider_y = Slider(slider_y_option) | bgcolor(Color::Grey23);
+    // float focus_x = 0.5f;
+    // float focus_y = 0.5f;
+    // SliderOption<float> slider_x_option = {&focus_x, 0.0f, 1.0f, 0.01f, Direction::Right, Color::White, Color::Grey50};
+    // SliderOption<float> slider_y_option = {&focus_y, 0.0f, 1.0f, 0.01f, Direction::Down, Color::White, Color::Grey50};
+    // auto slider_x = Slider(slider_x_option) | bgcolor(Color::Grey23);
+    // auto slider_y = Slider(slider_y_option) | bgcolor(Color::Grey23);
 
-    int* b_ptr = new int[128 * 128];
+    // int* b_ptr = new int[128 * 128];
 
-    for (int row = 0; row < 128; row++) {
-        for (int col = 0; col < 128; col++) {
-            b_ptr[row * 128 + col] = row;
-        }
-    }
+    // for (int row = 0; row < 128; row++) {
+    //     for (int col = 0; col < 128; col++) {
+    //         b_ptr[row * 128 + col] = row;
+    //     }
+    // }
     
 
-    Component block2 = Container::Vertical({
-        slider_x,
-        slider_y
-    });
+    // Component block2 = Container::Vertical({
+    //     slider_x,
+    //     slider_y
+    // });
 
-    Element matrix_b = make_grid(b_ptr, 128, 128);
+    // Element matrix_b = make_grid(b_ptr, 128, 128);
 
 
-    std::vector<Element> col_labels;
-    for (int i = 0; i < 128; i++) {
-        col_labels.push_back(text(std::to_string(i)) | center | frame | size(WIDTH, EQUAL, 3) | color(Color::Gold3Bis) | bgcolor(Color::Grey3));
-        col_labels.push_back(separator() | color(Color::Gold3) | bgcolor(Color::Grey3));
-        // col_labels.push_back(text("  ") | bgcolor(Color::Grey3));
-    }
-    Element matrix_b_col_labels = gridbox({col_labels});
+    // std::vector<Element> col_labels;
+    // for (int i = 0; i < 128; i++) {
+    //     col_labels.push_back(text(std::to_string(i)) | center | frame | size(WIDTH, EQUAL, 3) | color(Color::Gold3Bis) | bgcolor(Color::Grey3));
+    //     col_labels.push_back(separator() | color(Color::Gold3) | bgcolor(Color::Grey3));
+    //     // col_labels.push_back(text("  ") | bgcolor(Color::Grey3));
+    // }
+    // Element matrix_b_col_labels = gridbox({col_labels});
 
-    std::vector<std::vector<Element>> row_labels;
-    for (int i = 0; i < 127; i++) {
-        row_labels.push_back({text(std::to_string(i)) | size(HEIGHT, EQUAL, 1) | center | color(Color::Gold3Bis) | bgcolor(Color::Grey3)});
-        row_labels.push_back({separator() | color(Color::Gold3) | bgcolor(Color::Grey3)});
-    }
-    row_labels.push_back({text(std::to_string(127)) | size(HEIGHT, EQUAL, 1) | center | color(Color::Gold3Bis) | bgcolor(Color::Grey3)});
+    // std::vector<std::vector<Element>> row_labels;
+    // for (int i = 0; i < 127; i++) {
+    //     row_labels.push_back({text(std::to_string(i)) | size(HEIGHT, EQUAL, 1) | center | color(Color::Gold3Bis) | bgcolor(Color::Grey3)});
+    //     row_labels.push_back({separator() | color(Color::Gold3) | bgcolor(Color::Grey3)});
+    // }
+    // row_labels.push_back({text(std::to_string(127)) | size(HEIGHT, EQUAL, 1) | center | color(Color::Gold3Bis) | bgcolor(Color::Grey3)});
 
-    Element matrix_b_row_labels = gridbox(row_labels);
+    // Element matrix_b_row_labels = gridbox(row_labels);
 
-    Component block2_renderer = Renderer(block2,
-                                         [&]
-                                         {
-                                             return window(
-                                                 text("matrixB") | hcenter | bold,
+    // Component block2_renderer = Renderer(block2,
+    //                                      [&]
+    //                                      {
+    //                                          return window(
+    //                                              text("matrixB") | hcenter | bold,
 
-                                                vbox({
-                                                    hbox({
-                                                        vbox({
-                                                            slider_x->Render() | size(HEIGHT, EQUAL, 1),
-                                                            gridbox({
-                                                                {matrix_b_col_labels | focusPositionRelative(focus_x, 0) | frame | size(HEIGHT, EQUAL, 1)},
-                                                                {
-                                                                    matrix_b | focusPositionRelative(focus_x, focus_y) | frame,
-                                                                },
-                                                            }),
-                                                        }) | flex,
-                                                        vbox({
-                                                            text(" ") | size(HEIGHT, EQUAL, 2),
-                                                            hbox({
-                                                                matrix_b_row_labels | focusPositionRelative(0, focus_y) | frame,
-                                                                slider_y->Render()
-                                                            }) | yflex 
-                                                        }) | size(WIDTH, EQUAL, 4)
+    //                                             vbox({
+    //                                                 hbox({
+    //                                                     vbox({
+    //                                                         slider_x->Render() | size(HEIGHT, EQUAL, 1),
+    //                                                         gridbox({
+    //                                                             {matrix_b_col_labels | focusPositionRelative(focus_x, 0) | frame | size(HEIGHT, EQUAL, 1)},
+    //                                                             {
+    //                                                                 matrix_b | focusPositionRelative(focus_x, focus_y) | frame,
+    //                                                             },
+    //                                                         }),
+    //                                                     }) | flex,
+    //                                                     vbox({
+    //                                                         text(" ") | size(HEIGHT, EQUAL, 2),
+    //                                                         hbox({
+    //                                                             matrix_b_row_labels | focusPositionRelative(0, focus_y) | frame,
+    //                                                             slider_y->Render()
+    //                                                         }) | yflex 
+    //                                                     }) | size(WIDTH, EQUAL, 4)
 
-                                                    })
-                                                })
-                                                    
-                                                    
-                                                    
-                                                
-                                             );
-                                                //  vbox({,
-                                                //        hbox({,
-                                                //       })}));
-                                         });
+    //                                                 })
+    //                                             })
+    //                                          );
+    //                                      });
+
+    int row = 1024;
+    int col = 1024;
+    float* matrix_b_ptr = new float[row * col];
+    Component block2 = ::tui::component::MatrixFrame(matrix_b_ptr, row, col);
+
+
+
     Component block3 = Renderer([] { return text("block3") | center | flex;});
     Component block4 = Renderer([] { return text("block4") | center | flex;});
 
@@ -270,7 +271,7 @@ int main()
     // options.placeholder_block1 = text("Redraw matrix is inefficient") | center | bold;
     options.placeholder_block2 = text("Redraw matrix is inefficient") | center | bold;
 
-    Component menu1_renderer = tui::component::Resizable4Block(block1, block2_renderer, block3, block4, screen, options);
+    Component menu1_renderer = tui::component::Resizable4Block(block1, block2, block3, block4, screen, options);
 
     int tab_index = 0;
     std::vector<std::string> tab_entries = {

@@ -22,6 +22,9 @@
 #include "ftxui/screen/color.hpp"  // for Color, Color::BlueLight, Color::RedLight, Color::Black, Color::Blue, Color::Cyan, Color::CyanLight, Color::GrayDark, Color::GrayLight, Color::Green, Color::GreenLight, Color::Magenta, Color::MagentaLight, Color::Red, Color::White, Color::Yellow, Color::YellowLight, Color::Default, Color::Palette256, ftxui
 #include "ftxui/screen/color_info.hpp"  // for ColorInfo
 #include "ftxui/screen/terminal.hpp"    // for Size, Dimensions
+#ifdef __CUDA__
+#include <cuda_fp16.h>
+#endif
 
 namespace tui {
     namespace component {
@@ -139,12 +142,45 @@ namespace tui {
                 std::vector<std::vector<Component>> components_;
         };
 
+        template <typename T>
+        struct MatrixFrameOptions {
+            T* ptr;
+            int rows;
+            int cols;
+            ::std::function<Element(Element, int x, int y)> element_style = nullptr;
+            ::std::function<Element(Element, int x, int y)> separator_style = nullptr;
+            MatrixFrameOptions() = default;
+        };
 
+        template <typename T>
+        class MatrixFrameBase: public ftxui::ComponentBase, public MatrixFrameOptions<T> {
+            public:
+                explicit MatrixFrameBase(MatrixFrameOptions<T>& options);
+                Element Render() override;
+                Element getColLabels();
+                Element getRowLabels();
+                Element getMatrix();
+            private:
+                Element col_labels_;
+                Element row_labels_;
+                Component slider_x_;
+                Component slider_y_;
+                Element matrix_;
+                int text_width_ = 3;
+                float focus_x = 0.5f;
+                float focus_y = 0.5f;
+        };
 
 
         Component Resizable4Block(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options);
         Component RadioFrame(RadioFrameOptions options = RadioFrameOptions());
         Component RadioFrame(ConstStringListRef entries, int* selected, RadioFrameOptions options = RadioFrameOptions());
         Component InputForm(std::vector<InputFormOptions::ElementRowConfig> elements_config, InputFormOptions options = InputFormOptions());
+
+        Component MatrixFrame(float* ptr, int rows, int cols, MatrixFrameOptions<float> options = MatrixFrameOptions<float>());
+        Component MatrixFrame(int* ptr, int rows, int cols, MatrixFrameOptions<int> options = MatrixFrameOptions<int>());
+        #ifdef __CUDA__
+        Component MatrixFrame(half* ptr, int rows, int cols, MatrixFrameOptions<half> options = MatrixFrameOptions<half>());
+        #endif
     }
 }
