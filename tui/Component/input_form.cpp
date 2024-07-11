@@ -47,7 +47,7 @@ namespace tui {
             return gridbox(lines_);
         }
 
-       std::vector<Component> InputFormBase::renderFormRow(ConfigRow row) {
+       std::vector<Component> InputFormBase::renderFormRow(ElementRowConfig row) {
             std::vector<Component> row_components;
             for (auto config : row) {
                 if (config.input_type == InputType::Password) {
@@ -87,7 +87,7 @@ namespace tui {
             return element | size(WIDTH, LESS_THAN, max_width) | size(WIDTH, GREATER_THAN, min_width);
         }
 
-        Component InputForm(std::vector<InputFormOptions::ConfigRow> elements_config, InputFormOptions options) {
+        Component InputForm(std::vector<InputFormOptions::ElementRowConfig> elements_config, InputFormOptions options) {
             options.elements_config = std::move(elements_config);
             return std::make_shared<InputFormBase>(options);
         }

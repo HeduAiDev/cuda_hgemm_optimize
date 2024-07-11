@@ -117,13 +117,13 @@ namespace tui {
             std::function<Element(Element)> input_style = nullptr;
         };
         struct InputFormOptions {
-            using ConfigRow = std::vector<InputElementConfig>;
+            using ElementRowConfig = std::vector<InputElementConfig>;
             InputType default_input_type = InputType::Text;
             int default_max_label_width = 200;
             int default_min_label_width = 0;
             int default_max_input_width = 200;
             int default_min_input_width = 0;
-            std::vector<ConfigRow> elements_config;
+            std::vector<ElementRowConfig> elements_config;
             std::function<Element(Element)> default_label_style = [] (Element ele) { return ele; };
             std::function<Element(Element)> default_input_style = [] (Element ele) { return ele; };
             InputFormOptions() = default;
@@ -135,7 +135,7 @@ namespace tui {
             private:
                 Component setWidth(Component component, int max_width, int min_width);
                 Element setWidth(Element element, int max_width, int min_width);
-                std::vector<Component> renderFormRow(ConfigRow row);
+                std::vector<Component> renderFormRow(ElementRowConfig row);
                 std::vector<std::vector<Component>> components_;
         };
 
@@ -145,6 +145,6 @@ namespace tui {
         Component Resizable4Block(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options);
         Component RadioFrame(RadioFrameOptions options = RadioFrameOptions());
         Component RadioFrame(ConstStringListRef entries, int* selected, RadioFrameOptions options = RadioFrameOptions());
-        Component InputForm(std::vector<InputFormOptions::ConfigRow> elements_config, InputFormOptions options = InputFormOptions());
+        Component InputForm(std::vector<InputFormOptions::ElementRowConfig> elements_config, InputFormOptions options = InputFormOptions());
     }
 }
