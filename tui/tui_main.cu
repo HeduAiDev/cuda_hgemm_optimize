@@ -26,6 +26,7 @@
 #include "tui_tool_sets.hpp"
 
 using namespace ftxui;
+using namespace tui::component;
 
 int main()
 {
@@ -161,11 +162,13 @@ int main()
     int K = 64;
 
     float* matrix_b_ptr = new float[K * N];
-    float focus_M = 0;
-    float focus_N = 0;
-    float foucs_K = 0;
+    float focus_M = 0.5f;
+    float focus_N = 0.5f;
     ::tui::component::MatrixFrameOptions<float> matrix_b_options;
     matrix_b_options.focus_x = &focus_N;
+    
+    matrix_b_options.element_style =  tui::component::MatrixFrameOptionsCommonElementStyle::empty_style() | tui::component::MatrixFrameOptionsCommonElementStyle::mark_point_trace(10, 20, Color::Blue1, Color::Red1)
+    | MatrixFrameOptionsCommonElementStyle::mark_sub_matrix(1,1,5,7,Color::Red3);
     auto block2 =  ::tui::component::MatrixFrame(matrix_b_ptr, K, N, matrix_b_options);
     block2 = Renderer(block2, [=]{ return window(text("MatrixB") | hcenter | bold, block2->Render());});
 
@@ -207,7 +210,7 @@ int main()
     });
     Component main_renderer = Renderer(main_container, [&] {
         return vbox({
-            text("Demo" + config_tile_m +":"+ config_m +":"+ config_launch_cnt) | bold | hcenter,
+        text("Demo") | bold | hcenter,
             tab_section -> Render(),
             tab_content -> Render()
         });

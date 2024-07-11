@@ -142,16 +142,36 @@ namespace tui {
                 std::vector<std::vector<Component>> components_;
         };
 
+        struct MatrixFrameOptionsCommonElementStyle
+        {
+            using ElementStyle = std::function<void(Element &ele, int x, int y, Element &separator_right, Element &separator_bottom, Element &separator_cross)>;
+            // using Decorator = ::std::function<ElementStyle(ElementStyle)>;
+
+            static ::std::function<ElementStyle()> empty_style;
+            static ::std::function<ElementStyle(int row_id, Color color)> hight_light_row;
+            static ::std::function<ElementStyle(int col_id, Color color)> hight_light_col;
+            static ::std::function<ElementStyle(int row_id, int col_id, Color trace_color, Color point_color)> mark_point_trace;
+            static ::std::function<ElementStyle(int row_id, int col_id, Color color)> mark_point;
+            static ::std::function<ElementStyle(int left_up_row_id, int left_up_col_id, int right_bottom_row_id, int right_bottom_col_id, Color color)> mark_sub_matrix;
+
+            friend ElementStyle operator|(ElementStyle lhs, ElementStyle rhs);
+        };
+
+
         template <typename T>
         struct MatrixFrameOptions {
             T* ptr;
             int rows;
             int cols;
-            ::std::function<Element(Element, int x, int y)> element_style = nullptr;
-            ::std::function<Element(Element, int x, int y)> separator_style = nullptr;
+            // │ele│
+            // ┼───┼ , separator_right: |, separator_bottom: ───, separator_cross: ┼
+            // usage: options.element_style =  MatrixFrameOptionsCommonElementStyle::empty_style() | MatrixFrameOptionsCommonElementStyle::mark_point_trace(10, 20, Color::Blue1, Color::Red1);
+            MatrixFrameOptionsCommonElementStyle::ElementStyle element_style = nullptr;
             Ref<float> focus_x = new float(0.5f);
             Ref<float> focus_y = new float(0.5f); 
             MatrixFrameOptions() = default;
+            MatrixFrameOptions(const MatrixFrameOptions& other)
+            : ptr(other.ptr), rows(other.rows), cols(other.cols), element_style(other.element_style), focus_x(other.focus_x), focus_y(other.focus_y) {};
         };
 
         template <typename T>

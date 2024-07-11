@@ -38,7 +38,13 @@ target("TUI")
     set_targetdir("dist/tui")
     add_packages("ftxui")
     add_deps("algorithm", "tui_tool_sets")
-    -- add_ldflags("-static", {force = true})
+    if (is_host("windows")) then
+        add_cxxflags("/MT")
+    end
+    if (is_host("linux")) then
+        add_cxxflags("-static")
+        add_ldflags("-static")
+    end
 
 
 
