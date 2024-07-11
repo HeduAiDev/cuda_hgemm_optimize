@@ -29,8 +29,8 @@ namespace tui {
         MatrixFrameBase<T>::MatrixFrameBase(MatrixFrameOptions<T>& options) : MatrixFrameOptions(options) {
             col_labels_ = getColLabels();
             row_labels_ = getRowLabels();
-            SliderOption<float> slider_x_option = {&focus_x, 0.0f, 1.0f, 0.01f, Direction::Right, Color::White, Color::Grey50};
-            SliderOption<float> slider_y_option = {&focus_y, 0.0f, 1.0f, 0.01f, Direction::Down, Color::White, Color::Grey50};
+            SliderOption<float> slider_x_option = {focus_x, 0.0f, 1.0f, 0.01f, Direction::Right, Color::White, Color::Grey50};
+            SliderOption<float> slider_y_option = {focus_y, 0.0f, 1.0f, 0.01f, Direction::Down, Color::White, Color::Grey50};
             slider_x_ = Slider(slider_x_option) | bgcolor(Color::Grey23);
             slider_y_ = Slider(slider_y_option) | bgcolor(Color::Grey23);
             matrix_ = getMatrix();
@@ -48,19 +48,19 @@ namespace tui {
                     vbox({
                         slider_x_ -> Render() | size(HEIGHT, EQUAL, 1),
                         gridbox({
-                            {col_labels_ | focusPositionRelative(focus_x, 0) | frame | size(HEIGHT, EQUAL, 1)},
-                            {matrix_ | focusPositionRelative(focus_x, focus_y) | frame,},
+                            {col_labels_ | focusPositionRelative(focus_x(), 0) | frame | size(HEIGHT, EQUAL, 1)},
+                            {matrix_ | focusPositionRelative(focus_x(), focus_y()) | frame,},
                         }),
                     }) | flex,
                     vbox({
                         text(" ") | size(HEIGHT, EQUAL, 2),
                         hbox({
-                            row_labels_ | focusPositionRelative(0, focus_y) | frame,
+                            row_labels_ | focusPositionRelative(0, focus_y()) | frame,
                             slider_y_ -> Render()
                         }) | yflex
                     }) | size(WIDTH, EQUAL, 4)
                 })
-            })
+            });
         }
         
         template<typename T>
@@ -105,11 +105,22 @@ namespace tui {
             return gridbox(_rows_arr);
         }
 
+        template<typename T>
+        float& MatrixFrameBase<T>::getFocusX() {
+            return focus_x;
+        }
+
+        template<typename T>
+        float& MatrixFrameBase<T>::getFocusY() {
+            return focus_y;
+        }
+
 
         Component MatrixFrame(float* ptr, int rows, int cols, MatrixFrameOptions<float> options) {
             options.cols = cols;
             options.rows = rows;
             options.ptr = ptr;
+          
             return Make<MatrixFrameBase<float>>(options);
         }
         Component MatrixFrame(int* ptr, int rows, int cols, MatrixFrameOptions<int> options) {

@@ -149,6 +149,8 @@ namespace tui {
             int cols;
             ::std::function<Element(Element, int x, int y)> element_style = nullptr;
             ::std::function<Element(Element, int x, int y)> separator_style = nullptr;
+            Ref<float> focus_x = new float(0.5f);
+            Ref<float> focus_y = new float(0.5f); 
             MatrixFrameOptions() = default;
         };
 
@@ -160,6 +162,8 @@ namespace tui {
                 Element getColLabels();
                 Element getRowLabels();
                 Element getMatrix();
+                float& getFocusX();
+                float& getFocusY();
             private:
                 Element col_labels_;
                 Element row_labels_;
@@ -167,8 +171,7 @@ namespace tui {
                 Component slider_y_;
                 Element matrix_;
                 int text_width_ = 3;
-                float focus_x = 0.5f;
-                float focus_y = 0.5f;
+                
         };
 
 
