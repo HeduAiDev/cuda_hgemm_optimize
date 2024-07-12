@@ -9,6 +9,7 @@
 #include <thread>   // for sleep_for, thread
 #include <utility>  // for move
 #include <vector>   // for vector
+#include <unordered_map>  // for unordered_map
 
 #include "ftxui/component/component.hpp"  // for Checkbox, Renderer, Horizontal, Vertical, Input, Menu, Radiobox, ResizableSplitLeft, Tab
 #include "ftxui/component/component_base.hpp"  // for ComponentBase, Component
@@ -66,8 +67,18 @@ namespace tui {
         template<typename T>
         Element MatrixFrameBase<T>::getColLabels() {
             ::std::vector<Element> col_labels_arr;
+            ::std::unordered_map<int, ::std::pair<Color,Color>> color_map;
+            if (this -> label_marks.size() != 0) {
+                for (MatrixFrameOptionsLabelMark& item : this -> label_marks) {
+                    if (item.type == MatrixFrameOptionsLabelMark::LabelType::Col) {
+                        color_map[item.id] = {item.color, item.bgcolor};
+                    }
+                }
+            }
             for (int i = 0; i < this -> cols; i ++) {
-                col_labels_arr.push_back(text(::std::to_string(i)) | center | frame | size(WIDTH, EQUAL, text_width_) | color(Color::Gold3Bis) | bgcolor(Color::Grey3));
+                Color font_color, bg_color;
+                ::std::tie(font_color, bg_color) = color_map.count(i) ? color_map[i] : ::std::pair<Color, Color>(Color::Gold3Bis, Color::Grey3);
+                col_labels_arr.push_back(text(::std::to_string(i)) | center | frame | size(WIDTH, EQUAL, text_width_) | color(font_color) | bgcolor(bg_color));
                 col_labels_arr.push_back(separator() | color(Color::Gold3) | bgcolor(Color::Grey3));
             }
             return gridbox({col_labels_arr});
@@ -76,11 +87,22 @@ namespace tui {
         template<typename T>
         Element MatrixFrameBase<T>::getRowLabels() {
             ::std::vector<::std::vector<Element>> row_labels_arr;
+            ::std::unordered_map<int, ::std::pair<Color,Color>> color_map;
+            if (this -> label_marks.size() != 0) {
+                for (auto& [type, id, color, bgcolor] : this -> label_marks) {
+                    if (type == MatrixFrameOptionsLabelMark::LabelType::Row) {
+                        color_map[id] = {color, bgcolor};
+                    }
+                }
+            }
+            Color font_color, bg_color;
             for (int i = 0; i < this -> rows - 1; i ++) {
-                row_labels_arr.push_back({text(::std::to_string(i)) | size(HEIGHT, EQUAL, 1) | center | color(Color::Gold3Bis) | bgcolor(Color::Grey3)});
+                ::std::tie(font_color, bg_color) = color_map.count(i) ? color_map[i] : ::std::pair<Color, Color>(Color::Gold3Bis, Color::Grey3);
+                row_labels_arr.push_back({text(::std::to_string(i)) | size(HEIGHT, EQUAL, 1) | center | color(font_color) | bgcolor(bg_color)});
                 row_labels_arr.push_back({separator() | color(Color::Gold3) | bgcolor(Color::Grey3)});
             }
-            row_labels_arr.push_back({text(::std::to_string(this -> rows - 1)) | size(HEIGHT, EQUAL, 1) | center | color(Color::Gold3Bis) | bgcolor(Color::Grey3)});
+            ::std::tie(font_color, bg_color) = color_map.count(this -> rows - 1) ? color_map[this -> rows - 1] : ::std::pair<Color, Color>(Color::Gold3Bis, Color::Grey3);
+            row_labels_arr.push_back({text(::std::to_string(this -> rows - 1)) | size(HEIGHT, EQUAL, 1) | center | color(font_color) | bgcolor(bg_color)});
             return gridbox(row_labels_arr);
         }
 

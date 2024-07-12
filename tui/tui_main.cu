@@ -169,6 +169,8 @@ int main()
     
     matrix_b_options.element_style =  tui::component::MatrixFrameOptionsCommonElementStyle::empty_style() | tui::component::MatrixFrameOptionsCommonElementStyle::mark_point_trace(10, 20, Color::Blue1, Color::Red1)
     | MatrixFrameOptionsCommonElementStyle::mark_sub_matrix(1,1,5,7,Color::Red3);
+    matrix_b_options.label_marks.push_back({"col", 20, Color::Red1});
+    matrix_b_options.label_marks.push_back({MatrixFrameOptionsLabelMark::LabelType::Row, 10, Color::Red1});
     auto block2 =  ::tui::component::MatrixFrame(matrix_b_ptr, K, N, matrix_b_options);
     block2 = Renderer(block2, [=]{ return window(text("MatrixB") | hcenter | bold, block2->Render());});
 
