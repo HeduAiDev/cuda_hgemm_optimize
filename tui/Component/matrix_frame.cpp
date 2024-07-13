@@ -1,26 +1,4 @@
-#include <stddef.h>    // for size_t
-#include <array>       // for array
-#include <atomic>      // for atomic
-#include <chrono>      // for operator""s, chrono_literals
-#include <cmath>       // for sin
-#include <functional>  // for ref, reference_wrapper, function
-#include <memory>      // for allocator, shared_ptr, __shared_ptr_access
-#include <string>  // for string, basic_string, char_traits, operator+, to_string
-#include <thread>   // for sleep_for, thread
-#include <utility>  // for move
-#include <vector>   // for vector
 #include <unordered_map>  // for unordered_map
-
-#include "ftxui/component/component.hpp"  // for Checkbox, Renderer, Horizontal, Vertical, Input, Menu, Radiobox, ResizableSplitLeft, Tab
-#include "ftxui/component/component_base.hpp"  // for ComponentBase, Component
-#include "ftxui/component/component_options.hpp"  // for MenuOption, InputOption
-#include "ftxui/component/event.hpp"              // for Event, Event::Custom
-#include "ftxui/component/screen_interactive.hpp"  // for Component, ScreenInteractive
-#include "ftxui/dom/elements.hpp"  // for text, color, operator|, bgcolor, filler, Element, vbox, size, hbox, separator, flex, window, graph, EQUAL, paragraph, WIDTH, hcenter, Elements, bold, vscroll_indicator, HEIGHT, flexbox, hflow, border, frame, flex_grow, gauge, paragraphAlignCenter, paragraphAlignJustify, paragraphAlignLeft, paragraphAlignRight, dim, spinner, LESS_THAN, center, yframe, GREATER_THAN
-#include "ftxui/dom/flexbox_config.hpp"  // for FlexboxConfig
-#include "ftxui/screen/color.hpp"  // for Color, Color::BlueLight, Color::RedLight, Color::Black, Color::Blue, Color::Cyan, Color::CyanLight, Color::GrayDark, Color::GrayLight, Color::Green, Color::GreenLight, Color::Magenta, Color::MagentaLight, Color::Red, Color::White, Color::Yellow, Color::YellowLight, Color::Default, Color::Palette256, ftxui
-#include "ftxui/screen/color_info.hpp"  // for ColorInfo
-#include "ftxui/screen/terminal.hpp"    // for Size, Dimensions
 #include "tui_tool_sets.hpp"
 namespace tui {
     namespace component {
@@ -105,6 +83,42 @@ namespace tui {
             row_labels_arr.push_back({text(::std::to_string(this -> rows - 1)) | size(HEIGHT, EQUAL, 1) | center | color(font_color) | bgcolor(bg_color)});
             return gridbox(row_labels_arr);
         }
+
+        #ifdef __CUDA__
+        template <>
+        Element  MatrixFrameBase<half>::getMatrix() {
+            ::std::vector<Elements> _rows_arr;
+            for (int i = 0; i < this -> rows; i++) {
+                ::std::vector<Element> _cols_arr;
+                ::std::vector<Element> _separator_arr;
+                for (int j = 0; j < this -> cols; j++) {
+                    float val = __half2float(this -> ptr[i * this -> cols + j]);
+                    // │ele│
+                    // ┼───┼
+                    Element ele = text(std::to_string(val)) | center | frame | size(WIDTH, EQUAL, 3) | size(HEIGHT, EQUAL, 1); 
+                    // |
+                    Element separator_right = separator();
+                    // ───
+                    Element separator_bottom = separator();
+                    // ┼
+                    Element separator_cross = separator();
+                    if (this -> element_style != nullptr) {
+                        this -> element_style(ele, j, i, separator_right, separator_bottom, separator_cross);
+                    }
+                    _cols_arr.push_back(ele);
+                    _cols_arr.push_back(separator_right);
+                    _separator_arr.push_back(separator_bottom);
+                    _separator_arr.push_back(separator_cross);
+                }
+                _rows_arr.push_back(_cols_arr);
+                if (i != this -> rows - 1) {
+                    _rows_arr.push_back(_separator_arr);
+                }
+            }
+            return gridbox(_rows_arr);
+        }
+        #endif        
+
 
         template <typename T>
         Element  MatrixFrameBase<T>::getMatrix() {
@@ -240,8 +254,6 @@ namespace tui {
                 };
             }
 
-
-
         Component MatrixFrame(float* ptr, int rows, int cols, MatrixFrameOptions<float> options) {
             options.cols = cols;
             options.rows = rows;
@@ -249,19 +261,35 @@ namespace tui {
           
             return Make<MatrixFrameBase<float>>(options);
         }
+
+        Component MatrixFrame(double* ptr, int rows, int cols, MatrixFrameOptions<double> options) {
+            options.cols = cols;
+            options.rows = rows;
+            options.ptr = ptr;
+          
+            return Make<MatrixFrameBase<double>>(options);
+        }
+
         Component MatrixFrame(int* ptr, int rows, int cols, MatrixFrameOptions<int> options) {
             options.cols = cols;
             options.rows = rows;
             options.ptr = ptr;
+          
             return Make<MatrixFrameBase<int>>(options);
         }
+
         #ifdef __CUDA__
         Component MatrixFrame(half* ptr, int rows, int cols, MatrixFrameOptions<half> options) {
             options.cols = cols;
             options.rows = rows;
             options.ptr = ptr;
+          
             return Make<MatrixFrameBase<half>>(options);
         }
         #endif
+        
+
+        
+       
     }
 }

@@ -11,7 +11,6 @@
 #include <thread>   // for sleep_for, thread
 #include <utility>  // for move
 #include <vector>   // for vector
-
 #include "ftxui/component/component.hpp"  // for Checkbox, Renderer, Horizontal, Vertical, Input, Menu, Radiobox, ResizableSplitLeft, Tab
 #include "ftxui/component/component_base.hpp"  // for ComponentBase, Component
 #include "ftxui/component/component_options.hpp"  // for MenuOption, InputOption
@@ -37,6 +36,8 @@ namespace tui {
             Element placeholder_block4 = nullptr;
             std::function<Element()> separator_func = [] { return separator(); };
             std::function<Element()> separator_hover_func = [] { return separatorHeavy(); };
+            Ref<int> base_x = -1;
+            Ref<int> base_y = -1;
             Resizable4BlockOptions() = default;
             // Custom copy constructor
             Resizable4BlockOptions(const Resizable4BlockOptions& other)
@@ -45,7 +46,9 @@ namespace tui {
                 placeholder_block3(other.placeholder_block3),
                 placeholder_block4(other.placeholder_block4),
                 separator_func(other.separator_func),
-                separator_hover_func(other.separator_hover_func) {}
+                separator_hover_func(other.separator_hover_func),
+                base_x(std::move(other.base_x)),
+                base_y(std::move(other.base_y)) {}
             };
 
         class Resizable4Blockbase : public ftxui::ComponentBase {
@@ -144,7 +147,7 @@ namespace tui {
 
         struct MatrixFrameOptionsCommonElementStyle
         {
-            using ElementStyle = std::function<void(Element &ele, int x, int y, Element &separator_right, Element &separator_bottom, Element &separator_cross)>;
+            using ElementStyle = ::std::function<void(::ftxui::Element &ele, int x, int y, ::ftxui::Element &separator_right, ::ftxui::Element &separator_bottom, ::ftxui::Element &separator_cross)>;
             // using Decorator = ::std::function<ElementStyle(ElementStyle)>;
 
             static ::std::function<ElementStyle()> empty_style;
@@ -154,7 +157,7 @@ namespace tui {
             static ::std::function<ElementStyle(int row_id, int col_id, Color color)> mark_point;
             static ::std::function<ElementStyle(int left_up_row_id, int left_up_col_id, int right_bottom_row_id, int right_bottom_col_id, Color color)> mark_sub_matrix;
 
-            friend ElementStyle operator|(ElementStyle lhs, ElementStyle rhs);
+            friend MatrixFrameOptionsCommonElementStyle::ElementStyle operator|(MatrixFrameOptionsCommonElementStyle::ElementStyle lhs, MatrixFrameOptionsCommonElementStyle::ElementStyle rhs);
         };
 
         struct MatrixFrameOptionsLabelMark {
@@ -210,15 +213,24 @@ namespace tui {
         };
 
 
-        Component Resizable4Block(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options);
+        Component Resizable4Block(Component block1, Component block2, Component block3, Component block4, ScreenInteractive& screen, Resizable4BlockOptions options = Resizable4BlockOptions());
         Component RadioFrame(RadioFrameOptions options = RadioFrameOptions());
         Component RadioFrame(ConstStringListRef entries, int* selected, RadioFrameOptions options = RadioFrameOptions());
         Component InputForm(std::vector<InputFormOptions::ElementRowConfig> elements_config, InputFormOptions options = InputFormOptions());
 
+
         Component MatrixFrame(float* ptr, int rows, int cols, MatrixFrameOptions<float> options = MatrixFrameOptions<float>());
+        Component MatrixFrame(double* ptr, int rows, int cols, MatrixFrameOptions<double> options = MatrixFrameOptions<double>());
         Component MatrixFrame(int* ptr, int rows, int cols, MatrixFrameOptions<int> options = MatrixFrameOptions<int>());
         #ifdef __CUDA__
         Component MatrixFrame(half* ptr, int rows, int cols, MatrixFrameOptions<half> options = MatrixFrameOptions<half>());
         #endif
+
     }
 }
+// tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle operator|( tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle lhs, tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle rhs) {
+//     return [lhs, rhs](ftxui::Element &ele, int x, int y, ftxui::Element &separator_right, ftxui::Element &separator_bottom, ftxui::Element &separator_cross) {
+//         lhs(ele, x, y, separator_right, separator_bottom, separator_cross);
+//         rhs(ele, x, y, separator_right, separator_bottom, separator_cross);
+//     };
+// }

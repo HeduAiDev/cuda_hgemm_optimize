@@ -99,7 +99,7 @@ namespace utils
             assert(rows_ == ground_truth.getRows());
             assert(cols_ == ground_truth.getCols());
             float avg_diff = 0;
-            float max_diff = std::numeric_limits<T>::lowest();
+            float max_diff = std::numeric_limits<float>::lowest();
             for (int i = 0; i < rows_ * cols_; ++i)
             {
                 float diff = std::abs(static_cast<float>(hostData_[i] - ground_truth[i]));
