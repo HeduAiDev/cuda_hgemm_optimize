@@ -19,5 +19,5 @@ int main() {
    // t2.printHostData();
    // tui::runable::print_matrix(t2.hostPtr(), t1.getRows(), t1.getCols());
 
-   // tui::runable::diff(t1.hostPtr(), t2.hostPtr(), t1.getRows(), t1.getCols());  // t1.checkResult(t2);
+   tui::runable::diff(t1.hostPtr(), t2.hostPtr(), t1.getRows(), t1.getCols());  // t1.checkResult(t2);
 }
