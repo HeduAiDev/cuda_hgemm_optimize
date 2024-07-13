@@ -8,7 +8,7 @@ int main() {
     float* a = new float[rows * cols];
     float* b = new float[rows * cols];
     a[rows + cols] = -1.f;
-    // tui::runable::print_matrix(a, rows, cols);
-    tui::runable::diff(a, b, rows, cols);
+    tui::runable::print_matrix(a, rows, cols);
+    // tui::runable::diff(a, b, rows, cols);
     return 0;
 }

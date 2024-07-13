@@ -37,7 +37,7 @@ namespace tui {
                 max_diff = std::max(max_diff, diff);
                 avg_diff += diff;
             }
-            avg_diff /= rows * cols;
+            avg_diff /= err_indices.size();
             Component block1 = Renderer([&] {
                 return gridbox({
                     {text("Error nums") | bold | hcenter | color(Color::Gold3Bis), text(" : ") | bold, text(std::to_string(err_indices.size())) | bold | color(Color::Red1)},

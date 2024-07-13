@@ -100,13 +100,15 @@ namespace utils
             assert(cols_ == ground_truth.getCols());
             float avg_diff = 0;
             float max_diff = std::numeric_limits<float>::lowest();
+            int cnt = 0;
             for (int i = 0; i < rows_ * cols_; ++i)
             {
                 float diff = std::abs(static_cast<float>(hostData_[i] - ground_truth[i]));
                 max_diff = std::max(max_diff, diff);
                 avg_diff += diff;
+                cnt += (int)(diff <= precision);
             }
-            avg_diff /= rows_ * cols_;
+            avg_diff /= cnt;
             std::cout << "Is Equal: " << ((float)max_diff <= precision ? "${green}true${default}": "${red}false${default}") << std::endl;
             std::cout <<"Max diff: " << max_diff << ", Avg diff: " << avg_diff << std::endl;
         }
