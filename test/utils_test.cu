@@ -1,4 +1,3 @@
-#include "simt_naive.hpp"
 #include "utils/test.hpp"
 #include <utils/tensor.hpp>
 #include <cuda_fp16.h>
