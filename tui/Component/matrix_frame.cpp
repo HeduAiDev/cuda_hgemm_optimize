@@ -247,13 +247,6 @@ namespace tui {
             };
         };
 
-        MatrixFrameOptionsCommonElementStyle::ElementStyle operator|(MatrixFrameOptionsCommonElementStyle::ElementStyle lhs, MatrixFrameOptionsCommonElementStyle::ElementStyle rhs) {
-                return [lhs, rhs](Element &ele, int x, int y, Element &separator_right, Element &separator_bottom, Element &separator_cross) {
-                    lhs(ele, x, y, separator_right, separator_bottom, separator_cross);
-                    rhs(ele, x, y, separator_right, separator_bottom, separator_cross);
-                };
-            }
-
         Component MatrixFrame(float* ptr, int rows, int cols, MatrixFrameOptions<float> options) {
             options.cols = cols;
             options.rows = rows;
@@ -292,4 +285,12 @@ namespace tui {
         
        
     }
+}
+
+tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle operator|( tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle lhs, tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle rhs)
+{
+    return [lhs, rhs](ftxui::Element &ele, int x, int y, ftxui::Element &separator_right, ftxui::Element &separator_bottom, ftxui::Element &separator_cross) {
+        lhs(ele, x, y, separator_right, separator_bottom, separator_cross);
+        rhs(ele, x, y, separator_right, separator_bottom, separator_cross);
+    };
 }

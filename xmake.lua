@@ -78,7 +78,7 @@ target("TUI")
     end
     if (is_host("linux")) then
         add_cxxflags("-static")
-        add_ldflags("-static")
+        -- add_ldflags("-static")
     end
 
 
