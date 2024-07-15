@@ -17,7 +17,7 @@ int main() {
     C.initializeHostData(tensor::InitializationType::Zero);
     auto GroundTruth = tensor::Tensor<half>(M, N, tensor::StorageOrder::RowMajor);
     GroundTruth.initializeHostData(tensor::InitializationType::Zero);
-    simt_naive(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K);
+    simt_regci(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K);
     cuBLASGemm(A.hostPtr(), B.hostPtr(), GroundTruth.hostPtr(), M, N, K);
     ::tui::runable::diff(C.hostPtr(), GroundTruth.hostPtr(), M, N);
     // ::tui::runable::print_matrix(C.hostPtr(), M, N);

@@ -1,7 +1,7 @@
 #include <cublas_v2.h>
 #include "gemm/base.hpp"
 #include "utils/tensor.hpp"
-#include "gemm.hpp"
+#include "gemm.cuh"
 
 gemm::base::GemmOutput cuBLASGemm(half *A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K )
 {

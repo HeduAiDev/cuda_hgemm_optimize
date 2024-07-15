@@ -1,7 +1,9 @@
-#include "gemm.hpp"
+#include "gemm.cuh"
 #include "utils/tensor.hpp"
 using namespace gemm::base;
 
+#define BlockTileM 16
+#define BlockTileN 16
 
 
 
@@ -22,7 +24,7 @@ __global__ void simt_naive_kernel(half* __restrict__ A, half* __restrict__ B, ha
 
 
 
-gemm::base::GemmOutput simt_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, SimtNaiveOptions options) {
+gemm::base::GemmOutput simt_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K) {
     using namespace utils::tensor;
     Tensor<half> A = Tensor<half>( A_ptr, M, K, StorageOrder::RowMajor );
     Tensor<half> B = Tensor<half>( B_ptr, K, N, StorageOrder::RowMajor );
@@ -32,8 +34,6 @@ gemm::base::GemmOutput simt_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, 
     B.copyToDevice();
     C.copyToDevice();
 
-    int BlockTileM = options.get("BlockTileM");
-    int BlockTileN = options.get("BlockTileN");
     dim3 grid(divCeil(N, BlockTileN), divCeil(M, BlockTileM));
     dim3 block(BlockTileN, BlockTileM);
     utils::Timeit t;
