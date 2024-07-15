@@ -59,12 +59,10 @@ namespace tui {
             });
 
             MatrixFrameOptions<T> matrixAB_options;
-            matrixAB_options.element_style = MatrixFrameOptionsCommonElementStyle::empty_style();
             for (auto [row, col] : err_indices) {
                 matrixAB_options.label_marks.push_back({"row", row, Color::Red1});
                 matrixAB_options.label_marks.push_back({"col", col, Color::Red1});
-                matrixAB_options.element_style = matrixAB_options.element_style | 
-                                MatrixFrameOptionsCommonElementStyle::mark_point(row, col, Color::Red1);
+                matrixAB_options.element_style_stack.push_back(MatrixFrameOptionsCommonElementStyle::mark_point(row, col, Color::Red1));
             }
             Component matrixA = ::tui::component::MatrixFrame(ptr_a, rows, cols, matrixAB_options);
             auto matrixA_r = Renderer(matrixA, [&] {

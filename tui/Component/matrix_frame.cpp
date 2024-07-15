@@ -104,6 +104,10 @@ namespace tui {
                     Element separator_cross = separator();
                     if (this -> element_style != nullptr) {
                         this -> element_style(ele, j, i, separator_right, separator_bottom, separator_cross);
+                    }  else if (this -> element_style_stack.size() != 0) {
+                        for (auto &ele_style : this -> element_style_stack) {
+                            ele_style(ele, j, i, separator_right, separator_bottom, separator_cross);
+                        }
                     }
                     _cols_arr.push_back(ele);
                     _cols_arr.push_back(separator_right);
@@ -139,6 +143,10 @@ namespace tui {
                     Element separator_cross = separator();
                     if (this -> element_style != nullptr) {
                         this -> element_style(ele, j, i, separator_right, separator_bottom, separator_cross);
+                    } else if (this -> element_style_stack.size() != 0) {
+                        for (auto &ele_style : this -> element_style_stack) {
+                            ele_style(ele, j, i, separator_right, separator_bottom, separator_cross);
+                        }
                     }
                     _cols_arr.push_back(ele);
                     _cols_arr.push_back(separator_right);
