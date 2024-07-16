@@ -39,6 +39,9 @@ target("tui_tool_sets")
     if (is_host("windows")) then
         add_cxxflags("/MT")
     end
+    if (is_host("linux")) then
+        add_cxxflags("-static")
+    end
     on_load(function(target) 
         import("detect.sdks.find_cuda")
         local cuda = find_cuda()

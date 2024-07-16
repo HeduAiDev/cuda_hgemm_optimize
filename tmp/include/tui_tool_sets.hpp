@@ -184,12 +184,14 @@ namespace tui {
             // ┼───┼ , separator_right: |, separator_bottom: ───, separator_cross: ┼
             // usage: options.element_style =  MatrixFrameOptionsCommonElementStyle::empty_style() | MatrixFrameOptionsCommonElementStyle::mark_point_trace(10, 20, Color::Blue1, Color::Red1);
             MatrixFrameOptionsCommonElementStyle::ElementStyle element_style = nullptr;
+            // due to the element_style is a function, so we need to store the element_style in a stack limited to the max depth of the recursion
+            ::std::vector<MatrixFrameOptionsCommonElementStyle::ElementStyle> element_style_stack;
             ::std::vector<MatrixFrameOptionsLabelMark> label_marks;
             Ref<float> focus_x = new float(0.5f);
             Ref<float> focus_y = new float(0.5f); 
             MatrixFrameOptions() = default;
             MatrixFrameOptions(const MatrixFrameOptions& other)
-            : ptr(other.ptr), rows(other.rows), cols(other.cols), element_style(other.element_style), focus_x(other.focus_x), focus_y(other.focus_y), label_marks(std::move(other.label_marks)) {};
+            : ptr(other.ptr), rows(other.rows), cols(other.cols), element_style(other.element_style), focus_x(other.focus_x), focus_y(other.focus_y), label_marks(std::move(other.label_marks)), element_style_stack(std::move(other.element_style_stack)) {};
         };
 
         template <typename T>
@@ -202,6 +204,7 @@ namespace tui {
                 Element getMatrix();
                 float& getFocusX();
                 float& getFocusY();
+                friend tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle operator|( tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle lhs, tui::component::MatrixFrameOptionsCommonElementStyle::ElementStyle rhs);
             private:
                 Element col_labels_;
                 Element row_labels_;
