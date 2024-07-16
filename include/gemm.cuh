@@ -14,7 +14,7 @@ class SimtNaiveOptions: public gemm::base::GemmOptions {
         }
 };
 
-gemm::base::GemmOutput simt_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K);
+gemm::base::GemmOutput simt_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
 
 
 class SimtRegCIOptions: public gemm::base::GemmOptions {
@@ -27,4 +27,4 @@ class SimtRegCIOptions: public gemm::base::GemmOptions {
         }
 };
 
-gemm::base::GemmOutput simt_regci(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K);
+gemm::base::GemmOutput simt_regci(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);

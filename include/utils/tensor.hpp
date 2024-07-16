@@ -92,8 +92,12 @@ namespace utils
                     avg_diff += diff;
                     cnt += (int)(diff > precision);
                 }
-                avg_diff /= cnt;
-                std::cout << "Is Equal: " << ((float)max_diff <= precision ? "${green}true${default}": "${red}false${default}") << std::endl;
+                if (cnt == 0) {
+                    avg_diff = 0;
+                } else {
+                    avg_diff /= cnt;
+                }
+                std::cout << "Is Equal: " << ((float)max_diff <= precision ? "true": "false") << std::endl;
                 std::cout <<"Max diff: " << max_diff << ", Avg diff: " << avg_diff << std::endl;
             }
 

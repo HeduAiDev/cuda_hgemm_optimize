@@ -26,7 +26,8 @@ namespace utils
     {
         cudaEvent_t e_start;
         cudaEvent_t e_stop;
-        float elapsed_time;
+        float elapsed_time = 0;
+        float cumulative_time = 0;
         void start()
         {
             CHECK(cudaEventCreate(&e_start));
@@ -40,6 +41,7 @@ namespace utils
             CHECK(cudaEventElapsedTime(&elapsed_time, e_start, e_stop));
             CHECK(cudaEventDestroy(e_start));
             CHECK(cudaEventDestroy(e_stop));
+            cumulative_time += elapsed_time;
         }
         float get_FLOPS(int m, int n, int k)
         {
@@ -47,19 +49,38 @@ namespace utils
         }
     };
 
-    struct __device_builtin__ __builtin_align__(16) float4
+    struct __device_builtin__ __builtin_align__(16) half8
     {
-        half data[8];
-        __host__ __device__ half operator[](unsigned idx) const { return data[idx]; }
-        __host__ __device__ half &operator[](unsigned idx) { return data[idx]; }
-        __host__ __device__ float4 operator+(const float4 &rhs) {
-            return {data[0] + rhs[0], data[1] + rhs[1], data[2] + rhs[2], data[3] + rhs[3],
-            data[4] + rhs[4], data[5] + rhs[5], data[6] + rhs[6], data[7] + rhs[7]};
+        float4 data{0};
+        __host__ __device__ half8() {
+        }
+        __host__ __device__ half8(const half8 &other) {
+            data = other.data;
+        };
+        __host__ __device__ half8(const half half1, const half half2, const half half3, const half half4,
+        const half half5, const half half6, const half half7, const half half8) {
+            half* ptr = (half*)&data;
+            ptr[0] = half1;
+            ptr[1] = half2;
+            ptr[2] = half3;
+            ptr[3] = half4;
+            ptr[4] = half5;
+            ptr[5] = half6;
+            ptr[6] = half7;
+            ptr[7] = half8;
+        };
+        __host__ __device__ half operator[](unsigned idx) const { return ((half*)&data)[idx]; }
+        __host__ __device__ half &operator[](unsigned idx) { return ((half*)&data)[idx]; }
+        __host__ __device__ half8 operator+(const half8 &rhs) {
+            half* ptr = (half*)&data;
+            return {ptr[0] + rhs[0], ptr[1] + rhs[1], ptr[2] + rhs[2], ptr[3] + rhs[3],
+            ptr[4] + rhs[4], ptr[5] + rhs[5], ptr[6] + rhs[6], ptr[7] + rhs[7]};
         }
 
-        __host__ __device__ float4 operator*(const half &rhs) {
-            return {data[0] * rhs, data[1] * rhs, data[2] * rhs, data[3] * rhs,
-            data[4] * rhs, data[5] * rhs, data[6] * rhs, data[7] * rhs};
+        __host__ __device__ half8 operator*(const half &rhs) {
+            half* ptr = (half*)&data;
+            return {ptr[0] * rhs, ptr[1] * rhs, ptr[2] * rhs, ptr[3] * rhs,
+            ptr[4] * rhs, ptr[5] * rhs, ptr[6] * rhs, ptr[7] * rhs};
         }
 
     };

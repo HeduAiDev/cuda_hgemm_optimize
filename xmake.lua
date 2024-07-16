@@ -18,7 +18,6 @@ add_moduledirs("tools")
 target("algorithm")
     set_default(false)
     set_kind("phony")
-    
     add_defines("__CUDA__", {interface = true})
     set_targetdir("dist/alg", {interface = true})
     add_packages("cutlass", {interface = true})
@@ -90,6 +89,7 @@ for _, file in ipairs(os.files("test/*.cu")) do
         add_files(file)
         add_files("src/*.cu")
         set_targetdir("dist/test")
+        set_optimize("none")
         add_deps("algorithm")
 end
 
