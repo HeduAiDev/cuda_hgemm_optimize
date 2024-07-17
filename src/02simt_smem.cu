@@ -5,7 +5,7 @@ using namespace gemm::base;
 
 #define BlockTileM 256
 #define BlockTileN 128
-#define BlockTileK 16
+#define BlockTileK 32
 #define ThreadTileM 16
 #define ThreadTileN 16
 
@@ -92,7 +92,7 @@ __global__ void simt_smem_kernel(half* __restrict__ A, half* __restrict__ B, hal
             float4 buffer = gmem_blockB_f4_ptr[k * N / float4_element_num + offset_ld2s_global_by * ldm_B_f4size + offset_ld2s_global_bx];
             smem_blockB_f4_ptr[offset_st_smem_by * ldm_blockB_f4size + offset_st_smem_bx] = buffer;
         }
-        // it's impotant to sync threads before using shared memory
+        // it's impotant to sync threads before using shared memory, make sure smem data is freeze when register is reading
         __syncthreads();
         for (int bk = 0; bk < BlockTileK; bk++)
         {
@@ -120,6 +120,8 @@ __global__ void simt_smem_kernel(half* __restrict__ A, half* __restrict__ B, hal
                 }
             }
         }
+        // faster warp may start next loop to modify smem if without this fence, make sure smem data is freeze when register is reading
+        __syncthreads();
     }
     #pragma unroll
     for (int i = 0; i < ThreadTileM; i++) {
