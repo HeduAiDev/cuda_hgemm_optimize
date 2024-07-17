@@ -63,10 +63,6 @@ __global__ void simt_smem_kernel(half* __restrict__ A, half* __restrict__ B, hal
     int offset_ld_reg1_a = offset_st_global_cy;
     int offset_ld_reg1_b = offset_st_global_cx;
 
-    for (int i = 0; i < ThreadTileM * ThreadTileN; i++) {
-        reg_c_hf_ptr[i] = 0;
-    }
-
     for (int k = 0; k < K; k += BlockTileK) {
         // from global load a,b
         #pragma unroll
