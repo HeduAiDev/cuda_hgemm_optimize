@@ -98,7 +98,7 @@ namespace utils
                     avg_diff /= cnt;
                 }
                 std::cout << "Is Equal: " << ((float)max_diff <= precision ? "true": "false") << std::endl;
-                std::cout <<"Max diff: " << max_diff << ", Avg diff: " << avg_diff << std::endl;
+                std::cout <<"Error num: " << cnt <<", Max diff: " << max_diff << ", Avg diff: " << avg_diff << std::endl;
             }
 
             T& operator[] (int idx) const {
