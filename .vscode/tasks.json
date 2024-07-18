@@ -1,0 +1,101 @@
+{
+	"version": "2.0.0",
+	"windows": {
+		"options": {
+			"shell": {
+				"executable": "cmd.exe",
+				"args": [
+					"/d", "/c"
+				]
+			}
+		}
+	},
+	"tasks": [
+		// {
+		// 	"type": "shell",
+		// 	"label": "NVCC Run",
+		// 	"windows": {
+		// 		"command": "chcp 65001 && nvcc"
+		// 	},
+		// 	"command": "nvcc",
+		// 	"args": [
+		// 		"-arch=sm_75",
+		// 		"-lineinfo",
+		// 		"${file}",
+		// 		"-o",
+		// 		".//dist//${fileBasenameNoExtension}",
+		// 		"-I${workspaceFolder}//3rd//cutlass//include",
+		// 		"-std=c++17",
+		// 		"--expt-relaxed-constexpr",
+		// 		"-lcublas",
+		// 		"-run"
+		// 	],
+		// 	"options": {
+		// 		"cwd": "${workspaceFolder}"
+		// 	},
+		// 	"presentation": {
+		// 		"echo": true,
+		// 		"clear": false,
+		// 		"panel": "dedicated",
+		// 	},
+		// 	"group": {
+		// 		"kind": "none",
+		// 		"isDefault": true
+		// 	},
+		// 	"detail": "单文件（当前正在编辑的文件）编译并运行"
+		// },
+		// {
+		// 	"type": "shell",
+		// 	"label": "编译并运行",
+		// 	"windows": {
+		// 		"command": "chcp 65001 && xmake build -v ${fileBasenameNoExtension} && xmake run ${fileBasenameNoExtension}"
+		// 	},
+		// 	"command": "xmake build ${fileBasenameNoExtension} && xmake run ${fileBasenameNoExtension}",
+		// 	"options": {
+		// 		"cwd": "${workspaceFolder}"
+		// 	},
+		// 	"presentation": {
+		// 		"echo": true,
+		// 		"clear": false,
+		// 		"panel": "dedicated",
+		// 	},
+		// 	"group": {
+		// 		"kind": "none",
+		// 		"isDefault": true
+		// 	},
+		// 	"detail": "单文件（当前正在编辑的文件）编译并运行"
+		// },
+		{
+			"type": "shell",
+			"label": "Nsight Compute",
+			"windows": {
+				"command": "ncu"
+			},
+			"command": "ncu",
+			"args": [
+				"--set",
+				"full",
+				"--section",
+				"SpeedOfLight_HierarchicalHalfRooflineChart",
+				"--open-in-ui",
+				"-k",
+				"\"regex:^(?!check|test|valid).*\"", //过滤掉用来验证结果的kernel
+				"--target-processes",
+				"all",
+				"${workspaceFolder}\\dist\\test\\${fileBasenameNoExtension}.exe",
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"presentation": {
+				"echo": true,
+
+			},
+			"group": {
+				"kind": "none",
+				"isDefault": true
+			},
+			"detail": "使用Nsight Compute cli（ncu）调试当前文件并在Nsight Compute UI打开报告"
+		},
+	]
+}

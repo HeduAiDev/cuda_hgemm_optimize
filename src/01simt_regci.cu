@@ -7,7 +7,7 @@ using namespace gemm::base;
 #define ThreadTileM 16
 #define ThreadTileN 16
 
-// 7.969240 ms, M=N=2048, K=1024
+// 7.501184 ms, M=N=2048, K=1024
 //Improve REGister Computational Intensity
 __global__ void simt_regci_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     constexpr int float4_element_num = 8;

@@ -88,17 +88,20 @@ target("TUI")
 for _, file in ipairs(os.files("test/*.cu")) do 
     local file_name_without_ext = path.filename(file):match("(.+)%..+$")
     target(file_name_without_ext)
+        set_default(false)
         set_kind("binary")
         add_files(file)
         add_files("src/*.cu")
         set_targetdir("dist/test")
         set_optimize("none")
+        -- add_cuflags("-Xptxas -v")
         add_deps("algorithm")
 end
 
 for _, file in ipairs(os.files("tui/example/*.cu")) do 
     local file_name_without_ext = path.filename(file):match("(.+)%..+$")
     target(file_name_without_ext)
+        set_default(false)
         set_kind("binary")
         add_files(file)
         add_includedirs("tui/include")
