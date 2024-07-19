@@ -4,12 +4,13 @@ using namespace gemm::base;
 
 #define BlockTileM 256
 #define BlockTileN 128
-#define BlockTileK 64
+#define BlockTileK 16
 #define ThreadTileM 16
 #define ThreadTileN 8
 
-// 6.647104 ms, M=N=2048, K=1024
-__global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
+
+// 6.767962 ms, M=N=2048, K=1024, device 2080Ti
+__global__ void simt_smem_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     constexpr int float4_element_num = 8;
     constexpr int ldm_blockA = BlockTileK;
     constexpr int ldm_blockB = BlockTileN;
@@ -34,9 +35,9 @@ __global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, ha
     __shared__ float4 smem_A[BlockTileM * ldm_blockA_f4size];
     __shared__ float4 smem_B[BlockTileK * ldm_blockB_f4size];
 
-    float4 reg_a[ThreadTileM/float4_element_num];
-    float4 reg_b[ThreadTileN/float4_element_num];
-    float4 reg_c[ThreadTileM * ThreadTileN/float4_element_num]{0};
+    float4 reg_a[ThreadTileM/float4_element_num]; // 4
+    float4 reg_b[ThreadTileN/float4_element_num]; // 4
+    float4 reg_c[ThreadTileM * ThreadTileN/float4_element_num]{0}; // 16
     // reinterpret_cast has no runtime cost.
     #define gmem_blockA_hf_ptr   (A + (block_offsety) * K)
     #define gmem_blockB_hf_ptr   (B + block_offsetx)
@@ -69,14 +70,11 @@ __global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, ha
         {
             int offset_ld2s_global_ax = i % ldm_blockA_f4size;
             int offset_ld2s_global_ay = i / ldm_blockA_f4size;
-            int offset_st_smem_ax = offset_ld2s_global_ay;
-            int offset_st_smem_ay = offset_ld2s_global_ax;
+            int offset_st_smem_ax = offset_ld2s_global_ax;
+            int offset_st_smem_ay = offset_ld2s_global_ay;
             // if cc < 8.0, it must be stored in shared memory through register storage.
             float4 buffer = gmem_blockA_f4_ptr[k / float4_element_num + offset_ld2s_global_ay * ldm_A_f4size + offset_ld2s_global_ax];
-            #pragma unroll
-            for (int e = 0; e < float4_element_num; e++) {
-                smem_blockA_hf_ptr[(offset_st_smem_ay * float4_element_num  + e) * BlockTileM  + offset_st_smem_ax] = reinterpret_cast<half*>(&buffer)[e];
-            }
+            smem_blockA_f4_ptr[offset_st_smem_ay * ldm_blockA_f4size + offset_st_smem_ax] = buffer;
         }
 
         #pragma unroll
@@ -92,20 +90,21 @@ __global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, ha
         }
         // it's impotant to sync threads before using shared memory, make sure smem data is freeze when register is reading
         __syncthreads();
-        // #pragma unroll // unroll in this line is a negative optimization add about 0.2ms time costs, reason is unknow yet
+
+        #pragma unroll
         for (int bk = 0; bk < BlockTileK; bk++)
         {
             // ld reg_a element by element due to column is not continuous
             #pragma unroll
-            for (int i = 0; i < ThreadTileM / float4_element_num; i++)
+            for (int i = 0; i < ThreadTileM; i++)
             {
-                reg_a_f4_ptr[i] = smem_blockA_f4_ptr[bk * BlockTileM / float4_element_num + offset_ld_reg1_a / float4_element_num + i];
+                reg_a_hf_ptr[i] = smem_blockA_hf_ptr[(offset_ld_reg1_a + i) * ldm_blockA + bk];
             }
             // ld reg_b float4
             #pragma unroll
             for (int i = 0; i < ThreadTileN / float4_element_num; i++)
             {
-                reg_b_f4_ptr[i] = smem_blockB_f4_ptr[bk * ldm_blockB_f4size + offset_ld_reg1_b / float4_element_num + i];
+                reg_b_f4_ptr[i] = smem_blockB_f4_ptr[bk * ldm_blockB_f4size + offset_ld_reg1_b/float4_element_num + i];
             }
 
             // compute
@@ -132,8 +131,7 @@ __global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, ha
 };
 
 
-
-gemm::base::GemmOutput simt_smemT(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times) {
+gemm::base::GemmOutput simt_smem(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times) {
     using namespace utils::tensor;
     Tensor<half> A = Tensor<half>( A_ptr, M, K, StorageOrder::RowMajor );
     Tensor<half> B = Tensor<half>( B_ptr, K, N, StorageOrder::RowMajor );
@@ -151,7 +149,7 @@ gemm::base::GemmOutput simt_smemT(half* A_ptr, half *B_ptr, half *C_ptr, int M, 
     utils::Timeit t;
     for (int i = 0; i < launch_times; i++) {
         t.start();
-        simt_smemT_kernel<<<grid, block>>>(A.devicePtr(), B.devicePtr(), C.devicePtr(), M, N, K);
+        simt_smem_kernel<<<grid, block>>>(A.devicePtr(), B.devicePtr(), C.devicePtr(), M, N, K);
         t.stop();
         C.initializeHostData(InitializationType::Zero);
         C.copyToHost();
