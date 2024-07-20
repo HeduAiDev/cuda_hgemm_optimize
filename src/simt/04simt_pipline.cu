@@ -3,8 +3,8 @@
 using namespace gemm::base;
 
 #define BlockTileM 128
-#define BlockTileN 64
-#define BlockTileK 64
+#define BlockTileN 128
+#define BlockTileK 16
 #define ThreadTileM 8
 #define ThreadTileN 8
 // reference: https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/#software_pipelining
@@ -22,16 +22,12 @@ using namespace gemm::base;
         {                                                                                                                                                              \
             int offset_ld2s_global_ax = i % ldm_blockA_f4size;                                                                                                         \
             int offset_ld2s_global_ay = i / ldm_blockA_f4size;                                                                                                         \
-            int offset_st_smem_ax = offset_ld2s_global_ay;                                                                                                             \
-            int offset_st_smem_ay = offset_ld2s_global_ax;                                                                                                             \
             buffer_a[i / total_threads] = gmem_blockA_f4_ptr[(K) / float4_element_num + offset_ld2s_global_ay * ldm_A_f4size + offset_ld2s_global_ax];                 \
         }                                                                                                                                                              \
         _Pragma("unroll") for (int i = tid; i < BlockTileK * ldm_blockB_f4size; i += total_threads)                                                                    \
         {                                                                                                                                                              \
             int offset_ld2s_global_bx = i % ldm_blockB_f4size;                                                                                                         \
             int offset_ld2s_global_by = i / ldm_blockB_f4size;                                                                                                         \
-            int offset_st_smem_bx = offset_ld2s_global_bx;                                                                                                             \
-            int offset_st_smem_by = offset_ld2s_global_by;                                                                                                             \
             buffer_b[i / total_threads] = gmem_blockB_f4_ptr[(K) * N / float4_element_num + offset_ld2s_global_by * ldm_B_f4size + offset_ld2s_global_bx];             \
         }                                                                                                                                                              \
     }
@@ -83,8 +79,8 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
     constexpr int ldm_regC = ThreadTileN;
     constexpr int ldm_regC_f4size = ThreadTileN / float4_element_num;
     constexpr int total_threads = (BlockTileM / ThreadTileN) * (BlockTileN / ThreadTileN);
-    constexpr int buffer_a_size = BlockTileM * ldm_blockA_f4size / total_threads;
-    constexpr int buffer_b_size = BlockTileK * ldm_blockB_f4size / total_threads;
+    constexpr int buffer_a_size = divCeil(BlockTileM * ldm_blockA_f4size, total_threads);
+    constexpr int buffer_b_size = divCeil(BlockTileK * ldm_blockB_f4size, total_threads);
     int ldm_A = K;
     int ldm_B = N;
     int ldm_C = N;
@@ -132,12 +128,14 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
     int offset_ld_reg1_b = offset_st_global_cx;
     bool smem_write_idx = 0;
     bool reg_write_idx = 0;
+    // Global to Shared Memory
     LOAD_GLOBAL(0)
     STORE_SHARED(smem_write_idx)
     __syncthreads();
+    // Shared Memory to Registers
     // load bk frist data, after sync, smem_read_idx equal smem_write_idx since smem finish load, and data is freezed
     LOAD_SHARED(0, smem_write_idx, reg_write_idx)
-    // this loop we handle [0:-1] blocks
+    // this loop we compute [0:-1] gmem blocks and load [1:] gmem blocks
     for (int k = 1; k < K / BlockTileK; k ++) {
         smem_write_idx = !smem_write_idx;
         LOAD_GLOBAL(k * BlockTileK)
@@ -146,7 +144,7 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
         #pragma unroll
         for (int bk = 0; bk < BlockTileK - 1; bk++)
         {
-            // bk while participate in compute, we load next bk data
+            // bk will participate in compute, we load bk + 1 data
             LOAD_SHARED(bk + 1, !(smem_write_idx), reg_write_idx)
             // compute
             #pragma unroll
@@ -160,7 +158,7 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
             }
             reg_write_idx = !reg_write_idx;
         }
-        __syncthreads();
+        // __syncthreads(); // this sync is not necessary, since above compute use another smem write idx
         STORE_SHARED(smem_write_idx)
         __syncthreads();
         // next bk frist data
@@ -176,15 +174,17 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
             }
         }
     }
-    // handle last block, different from above, we don't need to load next data
+    // compute last gmem block, different from above, we don't need to load next block data
     smem_write_idx = !smem_write_idx;
     // we expect bk's iter number BlockTileK is always even, that's why reg_write_idx can hard code
     reg_write_idx = 1;
     #pragma unroll
     for (int bk = 0; bk < BlockTileK; bk++)
     {
-        // bk while participate in compute, we load next bk data
-        LOAD_SHARED(bk + 1, !(smem_write_idx), reg_write_idx)
+        // bk will participate in compute, we load bk + 1 data
+        if (bk < BlockTileK -1) {
+            LOAD_SHARED(bk + 1, !(smem_write_idx), reg_write_idx)
+        }
         // compute
         #pragma unroll
         for (int i = 0; i < ThreadTileM; i++)

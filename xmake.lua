@@ -95,7 +95,7 @@ for _, file in ipairs(os.files("test/*.cu")) do
         add_files("src/**.cu")
         -- add_files("src/**".. src_file ..".cu")
         set_targetdir("dist/test")
-        set_optimize("none")
+        -- set_optimize("none")
         -- add_cuflags("-Xptxas -v")
         add_deps("algorithm")
 end
