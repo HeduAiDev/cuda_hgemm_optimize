@@ -9,7 +9,7 @@ using namespace gemm::base;
 #define ThreadTileN 8
 
 
-// 6.767962 ms, M=N=2048, K=1024, device 2080Ti
+// 1.137482 ms, M=N=2048, K=1024, device 2080Ti
 __global__ void simt_smem_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     constexpr int float4_element_num = 8;
     constexpr int ldm_blockA = BlockTileK;

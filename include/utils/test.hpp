@@ -2,6 +2,15 @@
 #pragma once
 #include <iostream>
 
+#define TEST_IT(func, groundTruth, launch_cnt)                                            \
+    {                                                                                     \
+        {                                                                                 \
+            auto res = func(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K, launch_cnt); \
+            ::utils::test::print_centered(#func, 100, '=');                                               \
+            printf("%s: %f ms\n", #func, res.excute_time_ms);                         \
+            GroundTruth.checkResult(C);                                                   \
+        }                                                                                 \
+    }
 namespace utils
 {
     namespace test
@@ -93,5 +102,6 @@ namespace utils
                 putchar('\n');
             }
         }
+
     }
 }

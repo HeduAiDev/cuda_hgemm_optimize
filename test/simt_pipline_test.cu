@@ -19,7 +19,7 @@ int main() {
     auto GroundTruth = tensor::Tensor<half>(M, N, tensor::StorageOrder::RowMajor);
     GroundTruth.initializeHostData(tensor::InitializationType::Zero);
     cuBLASGemm(A.hostPtr(), B.hostPtr(), GroundTruth.hostPtr(), M, N, K);
-    auto res = simt_pipline(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K, 1);
+    auto res = simt_pipline(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K, 100);
     printf("simt_pipline: %f ms\n", res.excute_time_ms);
     GroundTruth.checkResult(C);
     // ::tui::runable::diff(C.hostPtr(), GroundTruth.hostPtr(), M, N);

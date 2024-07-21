@@ -1,5 +1,6 @@
 #include "gemm.cuh"
 #include "utils/tensor.hpp"
+#include <cuda_fp16.h>
 using namespace gemm::base;
 
 #define BlockTileM 256
@@ -8,7 +9,7 @@ using namespace gemm::base;
 #define ThreadTileM 16
 #define ThreadTileN 8
 
-// 6.647104 ms, M=N=2048, K=1024, device 2080Ti
+// 0.801578 ms, M=N=2048, K=1024, device 2080Ti
 __global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     constexpr int float4_element_num = 8;
     constexpr int ldm_blockA = BlockTileK;

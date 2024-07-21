@@ -93,10 +93,11 @@ for _, file in ipairs(os.files("test/*.cu")) do
         set_kind("binary")
         add_files(file)
         add_files("src/**.cu")
+        add_cugencodes("sm_75")
         -- add_files("src/**".. src_file ..".cu")
         set_targetdir("dist/test")
-        -- set_optimize("none")
-        -- add_cuflags("-Xptxas -v")
+        set_optimize("none")
+        -- add_cuflags("-lineinfo")
         add_deps("algorithm")
 end
 

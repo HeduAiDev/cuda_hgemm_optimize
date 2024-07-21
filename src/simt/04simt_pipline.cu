@@ -2,10 +2,10 @@
 #include "utils/tensor.hpp"
 using namespace gemm::base;
 
-#define BlockTileM 128
+#define BlockTileM 256
 #define BlockTileN 128
 #define BlockTileK 16
-#define ThreadTileM 8
+#define ThreadTileM 16
 #define ThreadTileN 8
 // reference: https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/#software_pipelining
 // ←-----------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ using namespace gemm::base;
         }                                                                                                                                                             \
     }
 
-// 6.647104 ms, M=N=2048, K=1024, device 2080Ti
+// 0.723219 ms, M=N=2048, K=1024, device 2080Ti
 __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     constexpr int float4_element_num = 8;
     constexpr int ldm_blockA = BlockTileK;
@@ -78,7 +78,7 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
     constexpr int ldm_blockC_f4size = BlockTileN / float4_element_num;
     constexpr int ldm_regC = ThreadTileN;
     constexpr int ldm_regC_f4size = ThreadTileN / float4_element_num;
-    constexpr int total_threads = (BlockTileM / ThreadTileN) * (BlockTileN / ThreadTileN);
+    constexpr int total_threads = (BlockTileM / ThreadTileM) * (BlockTileN / ThreadTileN);
     constexpr int buffer_a_size = divCeil(BlockTileM * ldm_blockA_f4size, total_threads);
     constexpr int buffer_b_size = divCeil(BlockTileK * ldm_blockB_f4size, total_threads);
     int ldm_A = K;

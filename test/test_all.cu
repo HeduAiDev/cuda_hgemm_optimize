@@ -2,6 +2,7 @@
 #include "utils/tensor.hpp"
 #include "utils/base.hpp"
 #include "tui_tool_sets_runable.hpp"
+#include "utils/test.hpp"
 using namespace utils;
 
 
@@ -19,13 +20,12 @@ int main() {
     auto GroundTruth = tensor::Tensor<half>(M, N, tensor::StorageOrder::RowMajor);
     GroundTruth.initializeHostData(tensor::InitializationType::Zero);
     cuBLASGemm(A.hostPtr(), B.hostPtr(), GroundTruth.hostPtr(), M, N, K);
-    gemm::base::GemmOutput res;
-    res = simt_smemT(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K, 1);
-    printf("simt_smemT: %f ms\n", res.excute_time_ms);
-    GroundTruth.checkResult(C);
-    res = simt_pipline(A.hostPtr(), B.hostPtr(), C.hostPtr(), M, N, K, 1);
-    printf("simt_pipline: %f ms\n", res.excute_time_ms);
-    GroundTruth.checkResult(C);
+    int launch_cnt = 1;
+    TEST_IT(simt_naive, GroundTruth, launch_cnt)
+    TEST_IT(simt_regci, GroundTruth, launch_cnt)
+    TEST_IT(simt_smem, GroundTruth, launch_cnt)
+    TEST_IT(simt_smemT, GroundTruth, launch_cnt)
+    TEST_IT(simt_pipline, GroundTruth, launch_cnt)
     // ::tui::runable::diff(C.hostPtr(), GroundTruth.hostPtr(), M, N);
     // ::tui::runable::print_matrix(A.hostPtr(), M, K);
     return 0;
