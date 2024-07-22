@@ -19,3 +19,7 @@ gemm::base::GemmOutput simt_regci(half* A_ptr, half *B_ptr, half *C_ptr, int M, 
 gemm::base::GemmOutput simt_smem(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
 gemm::base::GemmOutput simt_smemT(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
 gemm::base::GemmOutput simt_pipline(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
+
+//wmma
+gemm::base::GemmOutput wmma_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
+gemm::base::GemmOutput wmma_ci(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);

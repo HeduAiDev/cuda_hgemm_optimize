@@ -93,7 +93,7 @@ __global__ void simt_smemT_kernel(half* __restrict__ A, half* __restrict__ B, ha
         }
         // it's impotant to sync threads before using shared memory, make sure smem data is freeze when register is reading
         __syncthreads();
-        // #pragma unroll // unroll in this line is a negative optimization add about 0.2ms time costs, reason is unknow yet
+        #pragma unroll
         for (int bk = 0; bk < BlockTileK; bk++)
         {
             // ld reg_a element by element due to column is not continuous
