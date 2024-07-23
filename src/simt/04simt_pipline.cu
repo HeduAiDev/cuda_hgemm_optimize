@@ -16,19 +16,19 @@ using namespace gemm::base;
 // ↘-------------↘------------↘-------------↘-------------↘-------------↘-------------↘
 // |████Math█████|████Math█████|████Math█████|████Math█████|████Math█████|████Math█████|  Registers to CUDA cores
 
-#define LOAD_GLOBAL(K)                                                                                                                                                 \
+#define LOAD_GLOBAL(_K)                                                                                                                                                 \
     {                                                                                                                                                                  \
         _Pragma("unroll") for (int i = tid; i < BlockTileM * ldm_blockA_f4size; i += total_threads)                                                                    \
         {                                                                                                                                                              \
             int offset_ld2s_global_ax = i % ldm_blockA_f4size;                                                                                                         \
             int offset_ld2s_global_ay = i / ldm_blockA_f4size;                                                                                                         \
-            buffer_a[i / total_threads] = gmem_blockA_f4_ptr[(K) / float4_element_num + offset_ld2s_global_ay * ldm_A_f4size + offset_ld2s_global_ax];                 \
+            buffer_a[i / total_threads] = gmem_blockA_f4_ptr[(_K) * BlockTileK / float4_element_num + offset_ld2s_global_ay * ldm_A_f4size + offset_ld2s_global_ax];                 \
         }                                                                                                                                                              \
         _Pragma("unroll") for (int i = tid; i < BlockTileK * ldm_blockB_f4size; i += total_threads)                                                                    \
         {                                                                                                                                                              \
             int offset_ld2s_global_bx = i % ldm_blockB_f4size;                                                                                                         \
             int offset_ld2s_global_by = i / ldm_blockB_f4size;                                                                                                         \
-            buffer_b[i / total_threads] = gmem_blockB_f4_ptr[(K) * N / float4_element_num + offset_ld2s_global_by * ldm_B_f4size + offset_ld2s_global_bx];             \
+            buffer_b[i / total_threads] = gmem_blockB_f4_ptr[(_K) * BlockTileK * N / float4_element_num + offset_ld2s_global_by * ldm_B_f4size + offset_ld2s_global_bx];             \
         }                                                                                                                                                              \
     }
 
@@ -130,22 +130,26 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
     bool reg_write_idx = 0;
     // Global to Shared Memory
     LOAD_GLOBAL(0)
-    STORE_SHARED(smem_write_idx)
+    STORE_SHARED(0)
+    // STORE_SHARED(smem_write_idx)
     __syncthreads();
     // Shared Memory to Registers
     // load bk frist data, after sync, smem_read_idx equal smem_write_idx since smem finish load, and data is freezed
-    LOAD_SHARED(0, smem_write_idx, reg_write_idx)
-    // this loop we compute [0:-1] gmem blocks and load [1:] gmem blocks
+    LOAD_SHARED(0, 0, 0)
+    // LOAD_SHARED(0, smem_write_idx, reg_write_idx)
+    // handle [0:-1] gmem blocks and load [1:] gmem blocks
     for (int k = 1; k < K / BlockTileK; k ++) {
         smem_write_idx = !smem_write_idx;
-        LOAD_GLOBAL(k * BlockTileK)
-        // we expect bk's iter number BlockTileK is always even, that's why reg_write_idx can hard code
-        reg_write_idx = 1;
+        // load next gmem block
+        LOAD_GLOBAL(k)
+        
+        // handle [0:-1] smem blocks and load [1:] smem blocks
         #pragma unroll
-        for (int bk = 0; bk < BlockTileK - 1; bk++)
+        for (int bk = 1; bk < BlockTileK; bk++)
         {
-            // bk will participate in compute, we load bk + 1 data
-            LOAD_SHARED(bk + 1, !(smem_write_idx), reg_write_idx)
+            reg_write_idx = !reg_write_idx;
+            // load next bk
+            LOAD_SHARED(bk, !smem_write_idx, reg_write_idx)
             // compute
             #pragma unroll
             for (int i = 0; i < ThreadTileM; i++)
@@ -156,13 +160,13 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
                     reg_c_hf_ptr[i * ldm_regC + j] += reg_a_hf_ptr(!reg_write_idx)[i] * reg_b_hf_ptr(!reg_write_idx)[j];
                 }
             }
-            reg_write_idx = !reg_write_idx;
         }
+        // handle last smem block, different from above register load next smem block's first bk
+        // overlap store shared and compute
+        // store gmem block from buffer to smem
+
         // __syncthreads(); // this sync is not necessary, since above compute use another smem write idx
         STORE_SHARED(smem_write_idx)
-        __syncthreads();
-        // next bk frist data
-        LOAD_SHARED(0, smem_write_idx, reg_write_idx)
         // compute
         #pragma unroll
         for (int i = 0; i < ThreadTileM; i++)
@@ -170,20 +174,26 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
             #pragma unroll
             for (int j = 0; j < ThreadTileN; j++)
             {
-                reg_c_hf_ptr[i * ldm_regC + j] += reg_a_hf_ptr(!reg_write_idx)[i] * reg_b_hf_ptr(!reg_write_idx)[j];
+                // reg_write_idx is last smem block load in above last loop
+                reg_c_hf_ptr[i * ldm_regC + j] += reg_a_hf_ptr(reg_write_idx)[i] * reg_b_hf_ptr(reg_write_idx)[j];
             }
         }
+        __syncthreads();
+        // load smem first bk data 
+        LOAD_SHARED(0, smem_write_idx, !reg_write_idx)
+        
+        reg_write_idx = !reg_write_idx;
     }
-    // compute last gmem block, different from above, we don't need to load next block data
+    // handle last gmem block, different from above there is no next gmem block to load
     smem_write_idx = !smem_write_idx;
-    // we expect bk's iter number BlockTileK is always even, that's why reg_write_idx can hard code
-    reg_write_idx = 1;
+    // handle all smem blocks and load [1:] smem blocks
     #pragma unroll
     for (int bk = 0; bk < BlockTileK; bk++)
     {
+        reg_write_idx = !reg_write_idx;
         // bk will participate in compute, we load bk + 1 data
         if (bk < BlockTileK -1) {
-            LOAD_SHARED(bk + 1, !(smem_write_idx), reg_write_idx)
+            LOAD_SHARED(bk + 1, !smem_write_idx, reg_write_idx)
         }
         // compute
         #pragma unroll
@@ -195,7 +205,6 @@ __global__ void simt_pipline_kernel(half* __restrict__ A, half* __restrict__ B, 
                 reg_c_hf_ptr[i * ldm_regC + j] += reg_a_hf_ptr(!reg_write_idx)[i] * reg_b_hf_ptr(!reg_write_idx)[j];
             }
         }
-        reg_write_idx = !reg_write_idx;
     }
     // store c
     #pragma unroll
