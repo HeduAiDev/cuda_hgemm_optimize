@@ -20,7 +20,6 @@ using namespace gemm::base;
 __global__ void wmma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     int tid = threadIdx.x;
     int warp_id = tid / 32;
-    int lane_id = tid % 32;
     int warp_m = warp_id / (BlockTileN / WarpTileN);
     int warp_n = warp_id % (BlockTileN / WarpTileN);
     int offset_warp_st_global_cx = warp_n * WarpTileN;
