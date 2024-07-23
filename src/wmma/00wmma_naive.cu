@@ -24,10 +24,10 @@ __global__ void wmma_naive_kernel(half* __restrict__ A, half* __restrict__ B, ha
     int lane_id = tid % 32;
     int warp_m = warp_id / (BlockTileN / WarpTileN);
     int warp_n = warp_id % (BlockTileN / WarpTileN);
-    int offset_st_global_cx = warp_n * WarpTileN;
-    int offset_st_global_cy = warp_m * WarpTileM;
-    int offset_ld_frag_a = offset_st_global_cy;
-    int offset_ld_frag_b = offset_st_global_cx;
+    int offset_warp_st_global_cx = warp_n * WarpTileN;
+    int offset_warp_st_global_cy = warp_m * WarpTileM;
+    int offset_warp_ld_frag_a = offset_warp_st_global_cy;
+    int offset_warp_ld_frag_b = offset_warp_st_global_cx;
     #define blockA_ptr (A + (blockIdx.y * BlockTileM) * K)
     #define blockB_ptr (B + (blockIdx.x * BlockTileN))
     #define blockC_ptr (C + (blockIdx.y * BlockTileM) * N + (blockIdx.x * BlockTileN))
@@ -38,12 +38,12 @@ __global__ void wmma_naive_kernel(half* __restrict__ A, half* __restrict__ B, ha
     nvcuda::wmma::fill_fragment(c_frag, half(0.0f));
 
     for (int k = 0; k < K; k += WarpTileK) {
-        nvcuda::wmma::load_matrix_sync(a_frag, blockA_ptr + offset_ld_frag_a * K + k, K);
-        nvcuda::wmma::load_matrix_sync(b_frag, blockB_ptr + k * N + offset_ld_frag_b, N);
+        nvcuda::wmma::load_matrix_sync(a_frag, blockA_ptr + offset_warp_ld_frag_a * K + k, K);
+        nvcuda::wmma::load_matrix_sync(b_frag, blockB_ptr + k * N + offset_warp_ld_frag_b, N);
         nvcuda::wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
     }
     __syncthreads();
-    nvcuda::wmma::store_matrix_sync(blockC_ptr + offset_st_global_cy * N + offset_st_global_cx, c_frag, N, nvcuda::wmma::mem_row_major);
+    nvcuda::wmma::store_matrix_sync(blockC_ptr + offset_warp_st_global_cy * N + offset_warp_st_global_cx, c_frag, N, nvcuda::wmma::mem_row_major);
 };
 
 

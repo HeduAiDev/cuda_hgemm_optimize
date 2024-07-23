@@ -23,10 +23,10 @@ __global__ void wmma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half*
     int lane_id = tid % 32;
     int warp_m = warp_id / (BlockTileN / WarpTileN);
     int warp_n = warp_id % (BlockTileN / WarpTileN);
-    int offset_st_global_cx = warp_n * WarpTileN;
-    int offset_st_global_cy = warp_m * WarpTileM;
-    int offset_ld_frag_a = offset_st_global_cy;
-    int offset_ld_frag_b = offset_st_global_cx;
+    int offset_warp_st_global_cx = warp_n * WarpTileN;
+    int offset_warp_st_global_cy = warp_m * WarpTileM;
+    int offset_warp_ld_frag_a = offset_warp_st_global_cy;
+    int offset_warp_ld_frag_b = offset_warp_st_global_cx;
     constexpr int frag_m_size = WarpTileM / WMMA_M;
     constexpr int frag_n_size = WarpTileN / WMMA_N;
     #define blockA_ptr (A + (blockIdx.y * BlockTileM) * K)
@@ -44,9 +44,9 @@ __global__ void wmma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half*
 
     for (int k = 0; k < K; k += WarpTileK) {
         for (int i = 0; i < frag_m_size; i++) {
-            nvcuda::wmma::load_matrix_sync(a_frag[i], blockA_ptr + (offset_ld_frag_a + i * WMMA_M) * K + k, K);
+            nvcuda::wmma::load_matrix_sync(a_frag[i], blockA_ptr + (offset_warp_ld_frag_a + i * WMMA_M) * K + k, K);
             for (int j = 0; j < frag_n_size; j++) {
-                nvcuda::wmma::load_matrix_sync(b_frag[j], blockB_ptr + k * N + (offset_ld_frag_b + j * WMMA_N), N);
+                nvcuda::wmma::load_matrix_sync(b_frag[j], blockB_ptr + k * N + (offset_warp_ld_frag_b + j * WMMA_N), N);
                 nvcuda::wmma::mma_sync(c_frag[i][j], a_frag[i], b_frag[j], c_frag[i][j]);
             }
         }
@@ -54,7 +54,7 @@ __global__ void wmma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half*
     __syncthreads();
     for (int i = 0; i < frag_m_size; i++) {
         for (int j = 0; j < frag_n_size; j++) {
-            nvcuda::wmma::store_matrix_sync(blockC_ptr + (offset_st_global_cy + i * WMMA_M) * N + offset_st_global_cx + j * WMMA_N, c_frag[i][j], N, nvcuda::wmma::mem_row_major);
+            nvcuda::wmma::store_matrix_sync(blockC_ptr + (offset_warp_st_global_cy + i * WMMA_M) * N + offset_warp_st_global_cx + j * WMMA_N, c_frag[i][j], N, nvcuda::wmma::mem_row_major);
         }
     }
 };
