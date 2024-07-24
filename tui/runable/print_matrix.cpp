@@ -16,7 +16,15 @@ namespace tui {
                 auto terminal = Terminal::Size();
                 return frame -> Render() | size(HEIGHT, LESS_THAN, terminal.dimy < screen_size_y ? terminal.dimy -1 : screen_size_y) | size(WIDTH, EQUAL, screen_size_x);
             });
-            ScreenInteractive::TerminalOutput().Loop(main_renderer);
+            auto screen = ScreenInteractive::TerminalOutput();
+            main_renderer |= CatchEvent([&](Event event) {
+                if (event == Event::Character('q') || event == Event::Escape || event == Event::Return) {
+                    screen.ExitLoopClosure()();
+                    return true;
+                }
+                return false;
+            });
+            screen.Loop(main_renderer);
         }
         
         void print_matrix(float *ptr, int rows, int cols, int screen_size_x, int screen_size_y) {

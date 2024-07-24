@@ -82,8 +82,14 @@ namespace tui {
             }
             auto screen = ScreenInteractive::Fullscreen();
             Component main_renderer = Resizable4Block(block1, block2, matrixA_r, matrixB_r, screen, options);
+            main_renderer |= CatchEvent([&](Event event) {
+                if (event == Event::Character('q') || event == Event::Escape || event == Event::Return) {
+                    screen.ExitLoopClosure()();
+                    return true;
+                }
+                return false;
+            });
             screen.Loop(main_renderer);
-            
         }
 
         void diff(float *ptr_a, float *ptr_b, int rows, int cols, float accuracy) {
