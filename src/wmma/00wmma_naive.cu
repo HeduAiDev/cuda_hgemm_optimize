@@ -6,9 +6,6 @@ using namespace gemm::base;
 #define BlockTileM (16 * 4)
 #define BlockTileN (16 * 2)
 #define BlockTileK (16)
-#define WarpTileM 16
-#define WarpTileN 16
-#define WarpTileK 16
 
 #define WMMA_M  16
 #define WMMA_N  16
@@ -21,10 +18,10 @@ using namespace gemm::base;
 __global__ void wmma_naive_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     int tid = threadIdx.x;
     int warp_id = tid / 32;
-    int warp_m = warp_id / (BlockTileN / WarpTileN);
-    int warp_n = warp_id % (BlockTileN / WarpTileN);
-    int offset_warp_st_global_cx = warp_n * WarpTileN;
-    int offset_warp_st_global_cy = warp_m * WarpTileM;
+    int warp_m = warp_id / (BlockTileN / WMMA_N);
+    int warp_n = warp_id % (BlockTileN / WMMA_N);
+    int offset_warp_st_global_cx = warp_n * WMMA_N;
+    int offset_warp_st_global_cy = warp_m * WMMA_M;
     int offset_warp_ld_frag_a = offset_warp_st_global_cy;
     int offset_warp_ld_frag_b = offset_warp_st_global_cx;
     #define blockA_ptr (A + (blockIdx.y * BlockTileM) * K)
@@ -36,7 +33,7 @@ __global__ void wmma_naive_kernel(half* __restrict__ A, half* __restrict__ B, ha
     nvcuda::wmma::fragment<nvcuda::wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, half> c_frag;
     nvcuda::wmma::fill_fragment(c_frag, half(0.0f));
 
-    for (int k = 0; k < K; k += WarpTileK) {
+    for (int k = 0; k < K; k += WMMA_K) {
         nvcuda::wmma::load_matrix_sync(a_frag, blockA_ptr + offset_warp_ld_frag_a * K + k, K);
         nvcuda::wmma::load_matrix_sync(b_frag, blockB_ptr + k * N + offset_warp_ld_frag_b, N);
         nvcuda::wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
@@ -59,7 +56,7 @@ gemm::base::GemmOutput wmma_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, 
     C.copyToDevice();
 
     dim3 grid(divCeil(N, BlockTileN), divCeil(M, BlockTileM));
-    dim3 block((BlockTileN / WarpTileN) * (BlockTileM / WarpTileM) * WarpSize);
+    dim3 block((BlockTileN / WMMA_N) * (BlockTileM / WMMA_M) * WarpSize);
     utils::Timeit t;
     for (int i = 0; i < launch_times; i++) {
         t.start();
