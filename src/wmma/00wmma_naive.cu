@@ -5,7 +5,6 @@ using namespace gemm::base;
 
 #define BlockTileM (16 * 4)
 #define BlockTileN (16 * 2)
-#define BlockTileK (16)
 
 #define WMMA_M  16
 #define WMMA_N  16

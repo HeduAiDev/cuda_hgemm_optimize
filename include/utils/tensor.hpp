@@ -68,6 +68,32 @@ namespace utils
                 CHECK(cudaMemcpy(hostData_, deviceData_, rows_ * cols_ * sizeof(T), cudaMemcpyDeviceToHost));
             }
 
+            void transpose()
+            {
+                int orig_rows = rows_;
+                int orig_cols = cols_;
+                int size = orig_rows * orig_cols;
+
+                rows_ = orig_cols;
+                cols_ = orig_rows;
+
+                T *tmp = new T[size];
+
+                for (int i = 0; i < orig_rows; i++)
+                {
+                    for (int j = 0; j < orig_cols; j++)
+                    {
+                        tmp[j * orig_rows + i] = hostData_[i * orig_cols + j];
+                    }
+                }
+
+                if (own_host)
+                {
+                    delete[] hostData_;
+                }
+                hostData_ = tmp;
+            }
+
             int getRows() const {return rows_;};
             int getCols() const {return cols_;};
             T* hostPtr() const {return hostData_;};
