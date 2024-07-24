@@ -28,3 +28,4 @@ gemm::base::GemmOutput wmma_pipline(half* A_ptr, half *B_ptr, half *C_ptr, int M
 
 //mma
 gemm::base::GemmOutput mma_naive(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
+gemm::base::GemmOutput mma_ci(half* A_ptr, half *B_ptr, half *C_ptr, int M, int N, int K, const int launch_times = 1);
