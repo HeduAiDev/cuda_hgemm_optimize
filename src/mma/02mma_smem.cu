@@ -6,7 +6,7 @@ using namespace gemm::base;
 
 #define BlockTileM (16 * 16)
 #define BlockTileN (16 * 8)
-#define BlockTileK 8
+#define BlockTileK 16
 
 #define WarpTileM (16 * 4)
 #define WarpTileN (16 * 4)
@@ -18,7 +18,7 @@ using namespace gemm::base;
 #define MMA_K  8
 
 
-// 0.403607 ms, M=N=2048, K=1024
+// 0.363872 ms, M=N=2048, K=1024
 __global__ void mma_smem_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     int tid = threadIdx.x;
     int warp_id = tid / 32;
