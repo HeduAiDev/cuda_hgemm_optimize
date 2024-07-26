@@ -23,36 +23,36 @@ using namespace gemm::base;
 // ↘-------------↘------------↘-------------↘-------------↘-------------↘-------------↘
 // |████Math█████|████Math█████|████Math█████|████Math█████|████Math█████|████Math█████|  Registers to CUDA cores
 
-#define LOAD_GLOBAL(_K)                                                                                                                                                               \
-    {                                                                                                                                                                                 \
-        _Pragma("unroll") for (int i = tid; i < BlockTileM * BlockTileK / float4_element_num; i += total_threads)                                                                     \
-        {                                                                                                                                                                             \
-            int offset_ld2s_global_bx = i % ldm_blockA_f4size;                                                                                                                        \
-            int offset_ld2s_global_by = i / ldm_blockA_f4size;                                                                                                                        \
+#define LOAD_GLOBAL(_K)                                                                                                                                                             \
+    {                                                                                                                                                                               \
+        _Pragma("unroll") for (int i = tid; i < BlockTileM * BlockTileK / float4_element_num; i += total_threads)                                                                   \
+        {                                                                                                                                                                           \
+            int offset_ld2s_global_bx = i % ldm_blockA_f4size;                                                                                                                      \
+            int offset_ld2s_global_by = i / ldm_blockA_f4size;                                                                                                                      \
             buffer_a[i / total_threads] = *(reinterpret_cast<float4 *>(blockA_ptr + offset_ld2s_global_by * K + offset_ld2s_global_bx * float4_element_num + (_K) * BlockTileK));   \
-        }                                                                                                                                                                             \
-        _Pragma("unroll") for (int i = tid; i < BlockTileK * BlockTileN / float4_element_num; i += total_threads)                                                                     \
-        {                                                                                                                                                                             \
-            int offset_ld2s_global_bx = i % ldm_blockB_f4size;                                                                                                                        \
-            int offset_ld2s_global_by = i / ldm_blockB_f4size;                                                                                                                        \
+        }                                                                                                                                                                           \
+        _Pragma("unroll") for (int i = tid; i < BlockTileK * BlockTileN / float4_element_num; i += total_threads)                                                                   \
+        {                                                                                                                                                                           \
+            int offset_ld2s_global_bx = i % ldm_blockB_f4size;                                                                                                                      \
+            int offset_ld2s_global_by = i / ldm_blockB_f4size;                                                                                                                      \
             buffer_b[i / total_threads] = *(reinterpret_cast<float4 *>(blockB_ptr + (offset_ld2s_global_by + (_K) * BlockTileK) * N + offset_ld2s_global_bx * float4_element_num)); \
-        }                                                                                                                                                                             \
+        }                                                                                                                                                                           \
     }
 
-#define STORE_SHARED(SMEM_WRITE_IDX)                                                                                                                                  \
-    {                                                                                                                                                                 \
-        _Pragma("unroll") for (int i = tid; i < BlockTileM * BlockTileK / float4_element_num; i += total_threads)                                                     \
-        {                                                                                                                                                             \
-            int offset_ld2s_global_bx = i % ldm_blockA_f4size;                                                                                                        \
-            int offset_ld2s_global_by = i / ldm_blockA_f4size;                                                                                                        \
+#define STORE_SHARED(SMEM_WRITE_IDX)                                                                                                                                \
+    {                                                                                                                                                               \
+        _Pragma("unroll") for (int i = tid; i < BlockTileM * BlockTileK / float4_element_num; i += total_threads)                                                   \
+        {                                                                                                                                                           \
+            int offset_ld2s_global_bx = i % ldm_blockA_f4size;                                                                                                      \
+            int offset_ld2s_global_by = i / ldm_blockA_f4size;                                                                                                      \
             reinterpret_cast<float4 *>(smem_A + (SMEM_WRITE_IDX))[offset_ld2s_global_by * ldm_blockA_f4size + offset_ld2s_global_bx] = buffer_a[i / total_threads]; \
-        }                                                                                                                                                             \
-        _Pragma("unroll") for (int i = tid; i < BlockTileK * BlockTileN / float4_element_num; i += total_threads)                                                     \
-        {                                                                                                                                                             \
-            int offset_ld2s_global_bx = i % ldm_blockB_f4size;                                                                                                        \
-            int offset_ld2s_global_by = i / ldm_blockB_f4size;                                                                                                        \
+        }                                                                                                                                                           \
+        _Pragma("unroll") for (int i = tid; i < BlockTileK * BlockTileN / float4_element_num; i += total_threads)                                                   \
+        {                                                                                                                                                           \
+            int offset_ld2s_global_bx = i % ldm_blockB_f4size;                                                                                                      \
+            int offset_ld2s_global_by = i / ldm_blockB_f4size;                                                                                                      \
             reinterpret_cast<float4 *>(smem_B + (SMEM_WRITE_IDX))[offset_ld2s_global_by * ldm_blockB_f4size + offset_ld2s_global_bx] = buffer_b[i / total_threads]; \
-        }                                                                                                                                                             \
+        }                                                                                                                                                           \
     }
 
 #define LOAD_SHARED(BK, SMEM_READ_IDX, REG_WRITE_IDX)                                                                                                                                                              \

@@ -17,7 +17,7 @@ using namespace gemm::base;
 #define MMA_N  8
 #define MMA_K  8
 
-
+// this version use ldmatrix trans to transpose B
 // 0.470435 ms, M=N=2048, K=1024
 __global__ void mma_ldmatrix_trans_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     int tid = threadIdx.x;
