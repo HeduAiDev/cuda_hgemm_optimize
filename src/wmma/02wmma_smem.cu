@@ -16,7 +16,7 @@ using namespace gemm::base;
 #define WMMA_K  16
 
 
-// 1.046686 ms, M=N=2048, K=1024
+// 0.420666 ms, M=N=2048, K=1024
 __global__ void wmma_smem_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     int tid = threadIdx.x;
     int warp_id = tid / 32;
@@ -73,13 +73,19 @@ __global__ void wmma_smem_kernel(half* __restrict__ A, half* __restrict__ B, hal
         for (int bk = 0; bk < BlockTileK; bk += WarpTileK)
         {
             #pragma unroll
+            for (int i = 0; i < frag_m_size; i++) {
+                nvcuda::wmma::load_matrix_sync(a_frag[i], smem_A + (offset_warp_ld_frag_a + i * WMMA_M) * ldm_blockA + bk, ldm_blockA);
+            }
+            #pragma unroll
+            for (int i = 0; i < frag_n_size; i++) {
+                nvcuda::wmma::load_matrix_sync(b_frag[i], smem_B + bk * ldm_blockB + (offset_warp_ld_frag_b + i * WMMA_N), ldm_blockB);
+            }
+            #pragma unroll
             for (int i = 0; i < frag_m_size; i++)
             {
-                nvcuda::wmma::load_matrix_sync(a_frag[i], smem_A + (offset_warp_ld_frag_a + i * WMMA_M) * ldm_blockA + bk, ldm_blockA);
                 #pragma unroll
                 for (int j = 0; j < frag_n_size; j++)
                 {
-                    nvcuda::wmma::load_matrix_sync(b_frag[j], smem_B + bk * ldm_blockB + (offset_warp_ld_frag_b + j * WMMA_N), ldm_blockB);
                     nvcuda::wmma::mma_sync(c_frag[i][j], a_frag[i], b_frag[j], c_frag[i][j]);
                 }
             }

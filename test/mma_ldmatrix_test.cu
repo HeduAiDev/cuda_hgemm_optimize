@@ -19,8 +19,9 @@ int main() {
     C.initializeHostData(tensor::InitializationType::Zero);
     auto GroundTruth = tensor::Tensor<half>(M, N, tensor::StorageOrder::RowMajor);
     GroundTruth.initializeHostData(tensor::InitializationType::Zero);
-    cuBLASGemm(A.hostPtr(), B.hostPtr(), GroundTruth.hostPtr(), M, N, K);
+    auto res = cuBLASGemm(A.hostPtr(), B.hostPtr(), GroundTruth.hostPtr(), M, N, K);
     TEST_IT(mma_ldmatrix, GroundTruth, 100);
+    printf("cuBLASGemm: %f ms\n", res.excute_time_ms);
     // ::tui::runable::diff(C.hostPtr(), GroundTruth.hostPtr(), M, N);
     // ::tui::runable::print_matrix(A.hostPtr(), M, K);
     return 0;

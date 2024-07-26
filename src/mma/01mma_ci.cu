@@ -17,7 +17,7 @@ using namespace gemm::base;
 #define MMA_K  8
 
 
-// 0.538862 ms, M=N=2048, K=1024
+// 0.500464 ms, M=N=2048, K=1024
 __global__ void mma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half* __restrict__ C, int M, int N, int K) {
     int tid = threadIdx.x;
     int warp_id = tid / 32;
@@ -47,6 +47,8 @@ __global__ void mma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half* 
     int offset_thread_cy = lane_id / 4;
 
     uint32_t regD[frag_m_size][frag_n_size][2];
+    uint32_t regA[frag_m_size][2];
+    uint32_t regB[frag_n_size];
     #pragma unroll
     for (int i = 0; i < frag_m_size; i++) {
         #pragma unroll
@@ -60,6 +62,15 @@ __global__ void mma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half* 
     for (int k = 0; k < K; k += WarpTileK) {
         #pragma unroll
         for (int i = 0; i < frag_m_size; i++) {
+            regA[i][0] = _u32(warpA_ptr + (offset_thread_cy + i * MMA_M) * K + k + offset_thread_cx);
+            regA[i][1] = _u32(warpA_ptr + (offset_thread_cy + 8 + i * MMA_M) * K + k + offset_thread_cx);
+        }
+        #pragma unroll
+        for (int i = 0; i < frag_n_size; i++) {
+            regB[i] = _u32(warpB_ptr + (offset_thread_cy + i * MMA_N) * K + k + offset_thread_cx);
+        }
+        #pragma unroll
+        for (int i = 0; i < frag_m_size; i++) {
             #pragma unroll
             for (int j = 0; j < frag_n_size; j++) {
                 asm volatile(
@@ -69,8 +80,8 @@ __global__ void mma_ci_kernel(half* __restrict__ A, half* __restrict__ B, half* 
                     "{%4}, "
                     "{%5, %6}; "
                     :"=r"(regD[i][j][0]), "=r"(regD[i][j][1])
-                    :"r"(_u32(warpA_ptr + (offset_thread_cy + i * MMA_M) * K + k + offset_thread_cx)), "r"(_u32(warpA_ptr + (offset_thread_cy + 8 + i * MMA_M) * K + k + offset_thread_cx)),
-                     "r"(_u32(warpB_ptr + (offset_thread_cy + j * MMA_N) * K + k + offset_thread_cx)),
+                    :"r"(regA[i][0]), "r"(regA[i][1]),
+                     "r"(regB[j]),
                      "r"(regD[i][j][0]), "r"(regD[i][j][1])
                 );
 

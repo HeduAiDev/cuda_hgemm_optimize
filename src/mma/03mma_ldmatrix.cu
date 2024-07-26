@@ -81,12 +81,14 @@ __global__ void mma_ldmatrix_kernel(half* __restrict__ A, half* __restrict__ B, 
 
     for (int k = 0; k < K; k += BlockTileK) {
         // from global memory to shared memory
+        #pragma unroll
         for (int i = tid; i < BlockTileM * BlockTileK / float4_element_num; i += blockDim.x) {
             int offset_ld2s_global_bx = i % ldm_blockA_f4size;
             int offset_ld2s_global_by = i / ldm_blockA_f4size;
             float4 buffer = reinterpret_cast<float4*>(blockA_ptr)[offset_ld2s_global_by * ldm_A_f4size + offset_ld2s_global_bx + k / float4_element_num];
             reinterpret_cast<float4*>(smem_A)[offset_ld2s_global_by * ldm_blockA_f4size + offset_ld2s_global_bx] = buffer;
         }
+        #pragma unroll
         for (int i = tid; i < BlockTileN * BlockTileK / float4_element_num; i += blockDim.x) {
             int offset_ld2s_global_bx = i % ldm_blockB_f4size;
             int offset_ld2s_global_by = i / ldm_blockB_f4size;
@@ -94,6 +96,7 @@ __global__ void mma_ldmatrix_kernel(half* __restrict__ A, half* __restrict__ B, 
             reinterpret_cast<float4*>(smem_B)[offset_ld2s_global_by * ldm_blockB_f4size + offset_ld2s_global_bx] = buffer;
         }
         __syncthreads();
+        #pragma unroll
         for (int bk = 0; bk < BlockTileK; bk += WarpTileK) {
             #pragma unroll
             for (int i = 0; i < frag_m_size; i++) {
